@@ -1,4 +1,8 @@
-INC = -I$(RPN_TEMPLATE_LIBS)/include -I.
+# Set this to your current architecture.
+# E.g., Linux_x86 or Linux_x86-64
+ARCH = Linux_x86-64
+
+INC = -I. -I$(RPN_TEMPLATE_LIBS)/env-include -I$(RPN_TEMPLATE_LIBS)/env-include/$(ARCH)_gfortran
 
 COMPILE_C = gcc -fPIC -O$(OPTIMIZ) $(DEFINE) $(CFLAGS) $(INC) $(xSUPP_OPT) $(xC_SUPP_OPT) -c $<
 

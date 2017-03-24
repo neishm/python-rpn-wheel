@@ -3,23 +3,34 @@
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
 
-# Point to our makefile_suffix_rules.inc
-RPN_TEMPLATE_LIBS = $(PWD)
 
-.PHONY: all
+.PHONY: all packages
 
-LIBRMN_DIR = librmn-Release-$(LIBRMN_VERSION)
-VGRID_DIR = vgrid-$(VGRID_VERSION)
+packages: librmn vgrid python-rpn env-include env-code-tools code-tools r.gppf dot-tools
 
+librmn:
+	git clone https://github.com/armnlib/librmn.git
 
-all: $(LIBRMN_DIR) $(VGRID_DIR)
+vgrid:
+	git clone https://gitlab.com/ECCC_CMDN/vgrid.git
 
-$(LIBRMN_DIR):
-	curl -L https://github.com/armnlib/librmn/archive/Release-$(LIBRMN_VERSION).tar.gz -o $@.tar.gz
-	tar -xzvf $@.tar.gz
+python-rpn:
+	git clone https://github.com/meteokid/python-rpn.git
 
-$(VGRID_DIR):
-	curl -L https://gitlab.com/ECCC_CMDN/vgrid/repository/archive.tar.gz?ref=$(VGRID_VERSION) -o $@.tar.gz
-	tar -xzvf $@.tar.gz --transform 's/\(^vgrid-[^-]*\)-[a-z0-9]*/\1/'
+env-include:
+	git clone joule:/home/dormrb02/GIT-depots/env-include.git
 
+env-code-tools:
+	svn export svn://mrbsvn/env/env-code-tools@106
 
+code-tools:
+	git clone /home/ib/asph/lib/projects/code-tools/git code-tools
+
+r.gppf:
+	git clone /users/dor/asph/lib/projects-moved/r.gppf/git r.gppf
+
+dot-tools:
+	git clone /users/dor/asph/lib/projects/dot-tools/git dot-tools
+
+test: librmn env-code-tools code-tools r.gppf
+	(cd librmn/template_utils/gmm; env RPN_TEMPLATE_LIBS=$(PWD) PATH=$(PATH):$(PWD)/env-code-tools/bin:$(PWD)/code-tools/static/bin:$(PWD)/r.gppf/bin:$(PWD)/dot-tools/bin make locallib)
