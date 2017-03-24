@@ -1,0 +1,64 @@
+diff --git a/base/Makefile b/base/Makefile
+index bb26828..68ea9a7 100644
+--- a/base/Makefile
++++ b/base/Makefile
+@@ -105,7 +105,7 @@ grgg.o:		grgg.F 	kases.cdk 	pi.cdk
+ idxes.o:	idxes.F 	kases.cdk 
+ llfxy.o:	llfxy.F 	pi.cdk 
+ mxma.o:         mxma.F
+-	s.compile -O 1 -defines "=$(DEFINE)" -optf "=$(FFLAGS)" $(SUPP_OPT) $(FTN_SUPP_OPT) -src $<
++mxma.o: OPTIMIZ = 1
+ 
+ mzonxst.o:	mzonxst.F 
+ npspin.o:       npspin.F 	kases.cdk 	pi.cdk 
+diff --git a/interp/Makefile b/interp/Makefile
+index 893c1df..f4d854f 100644
+--- a/interp/Makefile
++++ b/interp/Makefile
+@@ -1,6 +1,6 @@
+ .SUFFIXES :
+ 
+-.SUFFIXES : .ftn90 .c .o .a
++.SUFFIXES : .ftn90 .c .o .a .f90
+ 
+ SHELL = /bin/bash
+ 
+diff --git a/make_locallib_packages b/make_locallib_packages
+index 271ed66..f290f42 100755
+--- a/make_locallib_packages
++++ b/make_locallib_packages
+@@ -6,7 +6,7 @@ echo mmake = $mmake
+ #workdir=`pwd`
+ if [[  ${CRAYOS_VERSION} == "" ]]; then
+ echo "================== Normal mode ======="
+-for package in base burp98_f cmc_log compresseur fstd98 interp interpv lamineur packers primitives readlx bmf spectral twinbuffer template_utils/gmm template_utils/whiteboard
++for package in base burp98_f cmc_log compresseur fstd98 interp interpv lamineur packers primitives readlx bmf spectral twinbuffer
+ do 
+   pushd ${package}
+   $mmake locallib
+diff --git a/merge_rmnlib_packages b/merge_rmnlib_packages
+index 424b8b6..df6acbf 100755
+--- a/merge_rmnlib_packages
++++ b/merge_rmnlib_packages
+@@ -4,7 +4,7 @@ workdir=$1
+ libdir=$2
+ libname=$3
+ cd ${workdir}
+-for package in ${srcd}/base ${srcd}/burp98_f ${srcd}/cmc_log ${srcd}/compresseur ${srcd}/fstd98 ${srcd}/interp ${srcd}/interpv ${srcd}/lamineur ${srcd}/packers ${srcd}/primitives ${srcd}/readlx ${srcd}/bmf ${srcd}/spectral ${srcd}/twinbuffer ${srcd}/template_utils/gmm ${srcd}/template_utils/whiteboard
++for package in ${srcd}/base ${srcd}/burp98_f ${srcd}/cmc_log ${srcd}/compresseur ${srcd}/fstd98 ${srcd}/interp ${srcd}/interpv ${srcd}/lamineur ${srcd}/packers ${srcd}/primitives ${srcd}/readlx ${srcd}/bmf ${srcd}/spectral ${srcd}/twinbuffer
+ do 
+   ar x ${package}/${EC_ARCH}/lib_local.a
+   ar rcv ${libdir}/${EC_ARCH}/${libname}.a *.o
+diff --git a/primitives/Makefile b/primitives/Makefile
+index 67815f3..fdbb6f9 100644
+--- a/primitives/Makefile
++++ b/primitives/Makefile
+@@ -39,7 +39,7 @@ TARRLS = beta
+ default: obj
+ 
+ rmnlib_v:
+-	-rm rmnlib_version.f
++	-rm -f rmnlib_version.f
+ 	./rmnlib_version $(RMNLIB_VERSION)
+ 
+ rmnlib_version.f: rmnlib_v
