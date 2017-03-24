@@ -1,5 +1,6 @@
 # For compiling librmn
 
+RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
 
@@ -7,6 +8,10 @@ LIBRMN = librmn/librmn_$(LIBRMN_VERSION).a
 LIBVGRID = vgrid/src/libdescrip.a
 
 .PHONY: all packages libs
+
+test: $(LIBRMN) $(LIBVGRID) python-rpn
+	cd python-rpn  && \
+	env ROOT=$(PWD)/python-rpn rpnpy=$(PWD)/python-rpn  make -f include/Makefile.local.mk rpnpy_version.py
 
 libs: $(LIBRMN) $(LIBVGRID)
 
@@ -24,7 +29,7 @@ vgrid:
 	git apply ../vgrid.patch
 
 python-rpn:
-	git clone https://github.com/meteokid/python-rpn.git
+	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION)
 
 env-include:
 	git clone joule:/home/dormrb02/GIT-depots/env-include.git
