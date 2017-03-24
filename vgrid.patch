@@ -1,0 +1,28 @@
+diff --git a/src/Makefile b/src/Makefile
+index c1ace57..ea667e1 100644
+--- a/src/Makefile
++++ b/src/Makefile
+@@ -1,22 +1,11 @@
+ 
+-ifeq ($(BASE_ARCH),$(EC_ARCH))
+-   $(info ERROR: please setup the compilation environment by typing the folowing:)
+-   $(info . setup.dot or . setup_gpsc.dot)
+-   $(error )
+-endif
+-
+ default: libdescrip.a
+ 
+ dependencies.mk: *.c *.F90 *.h *.hc
+ 	ls *.hc *.c *.F90 | ./s.dependencies.pl > dependencies.mk ;\
+ 
+ include dependencies.mk
+-
+-%.o: %.F90
+-	s.f90 -c $(MY_FFLAGS) $<
+-
+-%.o: %.c
+-	s.cc -c $(MY_CFLAGS) $<
++include $(RPN_TEMPLATE_LIBS)/include/makefile_suffix_rules.inc
+ 
+ libdescrip.a: $(OBJECTS) dependencies.mk
+ 	rm -f libdescrip.a && ar scru libdescrip.a *.o ;\
