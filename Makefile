@@ -24,6 +24,8 @@ env-include:
 	git clone joule:/home/dormrb02/GIT-depots/env-include.git
 
 
-$(LIBRMN): librmn
-	cd librmn; env RPN_TEMPLATE_LIBS=$(PWD) make
+$(LIBRMN): librmn env-include
+	cd librmn && \
+	git checkout Release-$(LIBRMN_VERSION) && \
+	env RPN_TEMPLATE_LIBS=$(PWD) make
 
