@@ -1,4 +1,3 @@
-# For compiling librmn
 
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
@@ -7,15 +6,11 @@ VGRID_VERSION = 6.1.10
 LIBRMN = librmn/librmn_$(LIBRMN_VERSION).a
 LIBVGRID = vgrid/src/libdescrip.a
 
-.PHONY: all packages libs
+.PHONY: test
 
 test: $(LIBRMN) $(LIBVGRID) python-rpn
 	cd python-rpn  && \
 	env ROOT=$(PWD)/python-rpn rpnpy=$(PWD)/python-rpn  make -f include/Makefile.local.mk rpnpy_version.py
-
-libs: $(LIBRMN) $(LIBVGRID)
-
-packages: librmn vgrid python-rpn env-include
 
 librmn:
 	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION) && \
