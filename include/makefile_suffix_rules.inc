@@ -39,8 +39,3 @@ PREPROCESSOR = cpp $(DEFINE) $(INC) $< $@
 	$(COMPILE_F90)
 
 
-.cdk90.o:
-	#s.compile -O $(OPTIMIZ) -optf "=$(FFLAGS)" $(SUPP_OPT) $(FTN90_SUPP_OPT) -src $<
-	echo "Error: WHUT"
-	exit 1
-
