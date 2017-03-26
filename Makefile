@@ -36,14 +36,17 @@ gfortran: gcc-$(GFORTRAN_VERSION)
 
 gcc-$(GFORTRAN_VERSION): gcc-$(GFORTRAN_VERSION).tar.xz gcc-4.8-infrastructure.tar.xz
 	tar -xJvf gcc-$(GFORTRAN_VERSION).tar.xz
-	tar -xJvf gcc-4.8-infrastructure.tar.xz -C gcc-$(GFORTRAN_VERSION)
+	tar -xJvf gcc-4.8-infrastructure.tar.xz -C $@
+	mv $@/bin $@/bin.orig
+	mkdir $@/bin
+	cd $@/bin && ln -s ../bin.orig/gfortran .
 	touch $@
 
 gcc-$(GFORTRAN_VERSION).tar.xz:
 	wget http://gfortran.meteodat.ch/download/x86_64/releases/$@
 
 gcc-4.8-infrastructure.tar.xz:
-	wget http://gfortran.meteodat.ch/download/x86_64/gcc-4.8-infrastructure.tar.xz
+	wget http://gfortran.meteodat.ch/download/x86_64/$@
 
 $(LIBRMN): librmn env-include
 	cd librmn && \
@@ -51,4 +54,4 @@ $(LIBRMN): librmn env-include
 
 $(LIBVGRID): vgrid env-include gfortran
 	cd vgrid/src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 CFLAGS="$(CFLAGS) -I/usr/include/x86_64-linux-gnu/" make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
