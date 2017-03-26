@@ -13,26 +13,28 @@ LIBRMN_SHARED = python-rpn/lib/rpnpy/librmn/lib$(LIBRMN_SHARED_NAME).so
 LIBVGRID_STATIC = vgrid/src/libdescrip.a
 LIBVGRID_SHARED = python-rpn/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).so
 
-.PHONY: test gfortran
+.PHONY: all gfortran
 
 
 ######################################################################
 # Rules for building the final package.
 
-test: python-rpn $(LIBRMN_SHARED) $(LIBVGRID_SHARED)
+all: python-rpn/lib/rpnpy/version.py $(LIBRMN_SHARED) $(LIBVGRID_SHARED)
+	env RPNPY_VERSION=$(RPNPY_VERSION) python setup.py bdist_wheel
+
+python-rpn/lib/rpnpy/version.py: python-rpn
 	cd python-rpn  && \
 	env ROOT=$(PWD)/python-rpn rpnpy=$(PWD)/python-rpn  make -f include/Makefile.local.mk rpnpy_version.py
 
-
 ######################################################################
 # Rules for building the required shared libraries.
-$(LIBRMN_SHARED): $(LIBRMN_STATIC)
+$(LIBRMN_SHARED): $(LIBRMN_STATIC) python-rpn
 	rm -f *.o
 	ar -x $<
 	gfortran -shared -o $@ *.o
 	rm -f *.o
 
-$(LIBVGRID_SHARED): $(LIBVGRID_STATIC)
+$(LIBVGRID_SHARED): $(LIBVGRID_STATIC) python-rpn
 	rm -f *.o
 	ar -x $<
 	gfortran -shared -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $(LIBRMN_SHARED))
