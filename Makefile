@@ -4,12 +4,15 @@ LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
 GFORTRAN_VERSION = 4.9.4
 
-LIBRMN = librmn/librmn_$(LIBRMN_VERSION).a
-LIBVGRID = vgrid/src/libdescrip.a
+LIBRMN_STATIC = librmn/librmn_$(LIBRMN_VERSION).a
+LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
+LIBRMN_SHARED = python-rpn/lib/rpnpy/librmn/lib$(LIBRMN_SHARED_NAME).so
+LIBVGRID_STATIC = vgrid/src/libdescrip.a
+LIBVGRID_SHARED = python-rpn/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).so
 
 .PHONY: test gfortran
 
-test: $(LIBRMN) $(LIBVGRID) python-rpn
+test: $(LIBRMN_SHARED) $(LIBVGRID_SHARED) python-rpn
 	cd python-rpn  && \
 	env ROOT=$(PWD)/python-rpn rpnpy=$(PWD)/python-rpn  make -f include/Makefile.local.mk rpnpy_version.py
 
@@ -48,10 +51,22 @@ gcc-$(GFORTRAN_VERSION).tar.xz:
 gcc-4.8-infrastructure.tar.xz:
 	wget http://gfortran.meteodat.ch/download/x86_64/$@
 
-$(LIBRMN): librmn env-include
+$(LIBRMN_STATIC): librmn env-include
 	cd librmn && \
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) make
 
-$(LIBVGRID): vgrid env-include gfortran
+$(LIBVGRID_STATIC): vgrid env-include gfortran
 	cd vgrid/src && \
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
+
+$(LIBRMN_SHARED): $(LIBRMN_STATIC)
+	rm -f *.o
+	ar -x $<
+	gfortran -shared -o $@ *.o
+	rm -f *.o
+
+$(LIBVGRID_SHARED): $(LIBVGRID_STATIC)
+	rm -f *.o
+	ar -x $<
+	gfortran -shared -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $(LIBRMN_SHARED))
+	rm -f *.o
