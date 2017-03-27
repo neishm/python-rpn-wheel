@@ -1,5 +1,9 @@
 from setuptools import setup, Distribution, find_packages
-import os
+import os, sys
+
+# Add rpnpy to the search path, so we can access the version info.
+sys.path.append(os.path.join('python-rpn','lib'))
+from rpnpy.version import __VERSION__
 
 # Need to force Python to treat this as a binary distribution.
 # We don't have any binary extension modules, but we do have shared
@@ -11,7 +15,7 @@ class BinaryDistribution(Distribution):
 
 setup (
   name = 'rpnpy',
-  version = os.environ['RPNPY_VERSION'],
+  version = __VERSION__,
   description = 'A Python interface for the librmn and vgrid modules from the RPN group at Environment and Climate Change Canada',
   url = 'https://github.com/meteokid/python-rpn',
   author = 'Stephane Chamberland',

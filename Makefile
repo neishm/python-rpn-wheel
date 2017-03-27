@@ -20,7 +20,7 @@ LIBVGRID_SHARED = python-rpn/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).so
 # Rules for building the final package.
 
 all: python-rpn/lib/rpnpy/version.py $(LIBRMN_SHARED) $(LIBVGRID_SHARED)
-	env RPNPY_VERSION=$(RPNPY_VERSION) python setup.py bdist_wheel
+	python setup.py bdist_wheel
 
 python-rpn/lib/rpnpy/version.py: python-rpn
 	cd python-rpn  && \
