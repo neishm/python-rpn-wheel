@@ -10,8 +10,10 @@ from rpnpy.version import __VERSION__
 # libraries that are architecture-specific.
 # http://stackoverflow.com/questions/24071491/how-can-i-make-a-python-wheel-from-an-existing-native-library
 class BinaryDistribution(Distribution):
-  def has_ext_modules(foo):
+  def has_ext_modules(self):
     return True
+  def is_pure(self):
+    return False
 
 setup (
   name = 'rpnpy',
