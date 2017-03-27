@@ -18,7 +18,8 @@ class BinaryDistribution(Distribution):
 setup (
   name = 'rpnpy',
   version = __VERSION__,
-  description = 'A Python interface for the librmn and vgrid modules from the RPN group at Environment and Climate Change Canada',
+  description = 'A Python interface for the RPN libraries at Environment and Climate Change Canada',
+  long_description = open(os.path.join('python-rpn','DESCRIPTION')).read(),
   url = 'https://github.com/meteokid/python-rpn',
   author = 'Stephane Chamberland',
   license = 'LGPL-2.1',
