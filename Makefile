@@ -37,7 +37,7 @@ $(LIBRMN_SHARED): $(LIBRMN_STATIC) python-rpn
 $(LIBVGRID_SHARED): $(LIBVGRID_STATIC) python-rpn
 	rm -f *.o
 	ar -x $<
-	gfortran -shared -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $(LIBRMN_SHARED))
+	gfortran -shared -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $(LIBRMN_SHARED)) -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
 	rm -f *.o
 
 
