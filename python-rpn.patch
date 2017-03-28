@@ -1,5 +1,5 @@
 diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
-index 78573a7..6f297f5 100755
+index 78573a7..958744d 100755
 --- a/lib/rpnpy/librmn/__init__.py
 +++ b/lib/rpnpy/librmn/__init__.py
 @@ -86,12 +86,13 @@ def loadRMNlib(rmn_version=None):
@@ -13,12 +13,12 @@ index 78573a7..6f297f5 100755
      RMN_LIBPATH = checkRMNlibPath(rmn_libfile)
      if not RMN_LIBPATH:
 -        for path in pylibpath + ldlibpath + eclibpath:
-+        for path in pylibpath + ldlibpath + eclibpath + localpath:
++        for path in localpath + pylibpath + ldlibpath + eclibpath:
              RMN_LIBPATH = checkRMNlibPath(os.path.join(path.strip(), rmn_libfile))
              if RMN_LIBPATH:
                  break
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
-index 207619d..921843f 100755
+index 207619d..03f362a 100755
 --- a/lib/rpnpy/vgd/__init__.py
 +++ b/lib/rpnpy/vgd/__init__.py
 @@ -88,12 +88,13 @@ def loadVGDlib(vgd_version=None):
@@ -32,7 +32,7 @@ index 207619d..921843f 100755
      VGD_LIBPATH = checkVGDlibPath(vgd_libfile)
      if not VGD_LIBPATH:
 -        for path in pylibpath + ldlibpath + eclibpath:
-+        for path in pylibpath + ldlibpath + eclibpath + localpath:
++        for path in localpath + pylibpath + ldlibpath + eclibpath:
              VGD_LIBPATH = checkVGDlibPath(os.path.join(path.strip(), vgd_libfile))
              if VGD_LIBPATH:
                  break
