@@ -34,13 +34,18 @@ all: wheels
 # All wheel architectures that we can build for.
 wheels: wheel-linux_x86_64 wheel-linux_i686
 
-wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED)
-	cd $< && python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
+wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) local_env
+	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
 
 # Need extra build parameters for specific architectures.
 # Note: this should be consistent with include/makefile_suffix_rules.inc
 wheel-linux_i686: FFLAGS := $(FFLAGS) -m32
 
+# Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
+# Tested on wheel v0.29
+local_env:
+	virtualenv $@
+	$@/bin/pip install wheel>=0.29.0
 
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@

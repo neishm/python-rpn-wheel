@@ -28,10 +28,12 @@ If you're within the CMC network, then the tool will automatically copy the `env
 
 You will also need `perl`, which vgrid needs to generate its *dependencies.mk* file.
 
-And, you'll need `python-wheel` to create the final wheel file.
+And, you'll need `python-virtualenv`, in order to build the packages with a more recent `wheel` module.
 
 Limitations
 ===========
-This tool is designed to be used on a Linux x86-64 system.
-It has only been tested on Ubuntu 14.04 so far.
+This tool is designed to be used on a `Linux x86-64` system.
+It has only been tested on `Ubuntu 14.04` so far.
+
+Currently, the generated wheels have external library dependencies (`libgfortran.so.3` and `libquadmath.so.0`) which means `libgfortran` will need to be installed as an auxiliary package on the target system.
 
