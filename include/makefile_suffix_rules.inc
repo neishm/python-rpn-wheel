@@ -1,8 +1,17 @@
 # Set this to your current architecture.
 # E.g., Linux_x86 or Linux_x86-64
-ARCH = Linux_x86-64
-
-INC = -I. -I$(PROJECT_ROOT)/env-include -I$(PROJECT_ROOT)/env-include/$(ARCH)_gfortran -I$(PROJECT_ROOT)/librmn/PUBLIC_INCLUDES
+ifeq ($(ARCH),linux-x86_64)
+  ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
+else ifeq ($(ARCH),linux-i686)
+  ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_gfortran
+  CFLAGS := $(CFLAGS) -m32
+  FFLAGS := $(FFLAGS) -m32
+else ifeq ($(ARCH),)
+  $(error $$ARCH is not defined.)
+else
+  $(error unrecognized ARCH value '$(ARCH)')
+endif
+INC = -I. -I$(PROJECT_ROOT)/env-include -I$(ARCH_MACRO_DIR) -I$(PROJECT_ROOT)/librmn/PUBLIC_INCLUDES
 
 COMPILE_C = gcc -fPIC -O$(OPTIMIZ) $(DEFINE) $(CFLAGS) $(INC) $(xSUPP_OPT) $(xC_SUPP_OPT) -c $<
 
