@@ -2,6 +2,8 @@
 # E.g., Linux_x86 or Linux_x86-64
 ifeq ($(ARCH),linux_x86_64)
   ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
+  CFLAGS := $(CFLAGS) -m64
+  FFLAGS := $(FFLAGS) -m64
 else ifeq ($(ARCH),linux_i686)
   ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_gfortran
   CFLAGS := $(CFLAGS) -m32

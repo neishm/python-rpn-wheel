@@ -40,12 +40,13 @@ wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) local_env
 # Need extra build parameters for specific architectures.
 # Note: this should be consistent with include/makefile_suffix_rules.inc
 wheel-linux_i686: FFLAGS := $(FFLAGS) -m32
+wheel-linux_x86_64: FFLAGS := $(FFLAGS) -m64
 
 # Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
 # Tested on wheel v0.29
 local_env:
 	virtualenv $@
-	$@/bin/pip install wheel>=0.29.0
+	$@/bin/pip install "wheel>=0.29.0"
 
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
