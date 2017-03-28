@@ -24,10 +24,16 @@ index 893c1df..f4d854f 100644
  SHELL = /bin/bash
  
 diff --git a/make_locallib_packages b/make_locallib_packages
-index 271ed66..f290f42 100755
+index 271ed66..9aad400 100755
 --- a/make_locallib_packages
 +++ b/make_locallib_packages
-@@ -6,7 +6,7 @@ echo mmake = $mmake
+@@ -1,12 +1,13 @@
+ #!/bin/bash
+ # set -x
++set -e
+ mmake=make
+ which gmake >/dev/null  && mmake=gmake
+ echo mmake = $mmake
  #workdir=`pwd`
  if [[  ${CRAYOS_VERSION} == "" ]]; then
  echo "================== Normal mode ======="
@@ -37,10 +43,15 @@ index 271ed66..f290f42 100755
    pushd ${package}
    $mmake locallib
 diff --git a/merge_rmnlib_packages b/merge_rmnlib_packages
-index 424b8b6..df6acbf 100755
+index 424b8b6..510acc9 100755
 --- a/merge_rmnlib_packages
 +++ b/merge_rmnlib_packages
-@@ -4,7 +4,7 @@ workdir=$1
+@@ -1,10 +1,11 @@
+-# set -x
++#!/bin/bash
++set -e
+ srcd=`pwd`
+ workdir=$1
  libdir=$2
  libname=$3
  cd ${workdir}
