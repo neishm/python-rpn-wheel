@@ -32,7 +32,7 @@ ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$@))))
 all: wheels
 
 # All wheel architectures that we can build for.
-wheels: wheel-linux-x86_64
+wheels: wheel-linux_x86_64
 
 wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED)
 	cd $< && python setup.py bdist_wheel --dist-dir=$(PWD)

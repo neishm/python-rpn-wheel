@@ -1,8 +1,8 @@
 # Set this to your current architecture.
 # E.g., Linux_x86 or Linux_x86-64
-ifeq ($(ARCH),linux-x86_64)
+ifeq ($(ARCH),linux_x86_64)
   ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
-else ifeq ($(ARCH),linux-i686)
+else ifeq ($(ARCH),linux_i686)
   ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_gfortran
   CFLAGS := $(CFLAGS) -m32
   FFLAGS := $(FFLAGS) -m32
