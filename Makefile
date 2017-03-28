@@ -32,10 +32,15 @@ ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$<))))
 all: wheels
 
 # All wheel architectures that we can build for.
-wheels: wheel-linux_x86_64
+wheels: wheel-linux_x86_64 wheel-linux_i686
 
 wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED)
 	cd $< && python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
+
+# Need extra build parameters for specific architectures.
+# Note: this should be consistent with include/makefile_suffix_rules.inc
+wheel-linux_i686: FFLAGS := $(FFLAGS) -m32
+
 
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
@@ -51,13 +56,13 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	gfortran -shared -o $@ *.o
+	gfortran -shared $(FFLAGS) -o $@ *.o
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	gfortran -shared -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)/../librmn -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
+	gfortran -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)/../librmn -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
 	rm -f *.o
 
 
