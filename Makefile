@@ -22,7 +22,7 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/vgd/libdescripshared_$(VGRID_VER
 
 # Using the above convention, we can extract the particular architecture from
 # the build targets (it should be the suffix of the top-level directory).
-ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$@))))
+ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$<))))
 
 .PHONY: all wheels gfortran
 
@@ -35,7 +35,7 @@ all: wheels
 wheels: wheel-linux_x86_64
 
 wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED)
-	cd $< && python setup.py bdist_wheel --dist-dir=$(PWD)
+	cd $< && python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
 
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
