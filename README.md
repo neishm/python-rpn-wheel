@@ -23,6 +23,7 @@ Requirements
 This tool will automatically download a copy of `Python-RPN`, `librmn`, and `vgrid`.
 
 You'll need `gcc-multilib` and `gfortran-multilib` to compile both the 32-bit and 64-bit versions of the wheels.
+You'll also need `gcc-mingw-w64` and `gfortran-mingw-w64` to compile for Windows.
 
 If you're within the CMC network, then the tool will automatically copy the `env-include` package, which is needed for compiling *librmn*.  If you're not within the CMC network, then you'll need to acquire this package yourself.
 

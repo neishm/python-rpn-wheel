@@ -32,7 +32,8 @@ ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$<))))
 all: wheels
 
 # All wheel architectures that we can build for.
-wheels: wheel-linux_x86_64 wheel-linux_i686
+#wheels: wheel-linux_x86_64 wheel-linux_i686
+wheels: wheel-win32
 
 wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) local_env
 	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
@@ -41,6 +42,14 @@ wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) local_env
 # Note: this should be consistent with include/makefile_suffix_rules.inc
 wheel-linux_i686: FFLAGS := $(FFLAGS) -m32
 wheel-linux_x86_64: FFLAGS := $(FFLAGS) -m64
+#wheel-win32: FFLAGS := $(FFLAGS) -m32
+
+wheel-linux%: SHAREDLIB_SUFFIX = so
+wheel-win%: SHAREDLIB_SUFFIX = dll
+
+wheel-linux%: GFORTRAN = gfortran
+wheel-win32: GFORTRAN = i686-w64-mingw32-gfortran
+wheel-win_amd64: GFORTRAN = x86_64-w64-mingw32-gfortran
 
 # Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
 # Tested on wheel v0.29
@@ -62,13 +71,13 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	gfortran -shared $(FFLAGS) -o $@ *.o
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	gfortran -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)/../librmn -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)/../librmn -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
 	rm -f *.o
 
 
