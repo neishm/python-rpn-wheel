@@ -1,3 +1,16 @@
+diff --git a/Makefile b/Makefile
+index fb4d0fb..83d50dd 100644
+--- a/Makefile
++++ b/Makefile
+@@ -24,7 +24,7 @@ genlib:
+ 	./merge_rmnlib_packages $(WORKDIR) $(LIBDIR) $(LIBNAME)_d ; \
+ 	else \
+ 	./make_locallib_packages ; \
+-	rm -f $(LIBDIR)/$(EC_ARCH)/$(LIBNAME).a ; \
++	rm -f $(LIBDIR)/$(EC_ARCH)/$(LIBNAME)*.a ; \
+ 	./merge_rmnlib_packages $(WORKDIR) $(LIBDIR) $(LIBNAME) ; \
+ 	fi
+ 
 diff --git a/base/Makefile b/base/Makefile
 index bb26828..68ea9a7 100644
 --- a/base/Makefile
@@ -43,10 +56,10 @@ index 271ed66..9aad400 100755
    pushd ${package}
    $mmake locallib
 diff --git a/merge_rmnlib_packages b/merge_rmnlib_packages
-index 424b8b6..510acc9 100755
+index 424b8b6..6efbdc6 100755
 --- a/merge_rmnlib_packages
 +++ b/merge_rmnlib_packages
-@@ -1,10 +1,11 @@
+@@ -1,12 +1,14 @@
 -# set -x
 +#!/bin/bash
 +set -e
@@ -59,7 +72,11 @@ index 424b8b6..510acc9 100755
 +for package in ${srcd}/base ${srcd}/burp98_f ${srcd}/cmc_log ${srcd}/compresseur ${srcd}/fstd98 ${srcd}/interp ${srcd}/interpv ${srcd}/lamineur ${srcd}/packers ${srcd}/primitives ${srcd}/readlx ${srcd}/bmf ${srcd}/spectral ${srcd}/twinbuffer
  do 
    ar x ${package}/${EC_ARCH}/lib_local.a
-   ar rcv ${libdir}/${EC_ARCH}/${libname}.a *.o
+-  ar rcv ${libdir}/${EC_ARCH}/${libname}.a *.o
++  ar rcv ${libdir}/${EC_ARCH}/${libname}_tmp.a *.o
+   rm *.o
+ done
++mv ${libdir}/${EC_ARCH}/${libname}_tmp.a ${libdir}/${EC_ARCH}/${libname}.a
 diff --git a/primitives/Makefile b/primitives/Makefile
 index 67815f3..fdbb6f9 100644
 --- a/primitives/Makefile
