@@ -13,10 +13,10 @@ RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).%
 LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).%
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
-LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/librmn/lib$(LIBRMN_SHARED_NAME).so
+LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/librmn/lib$(LIBRMN_SHARED_NAME).dll
 LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).%
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
-LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).so
+LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).dll
 
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBRMN_SHARED) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC) $(LIBDESCRIP_SHARED)
 
@@ -74,10 +74,11 @@ $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o
 	rm -f *.o
 
-$(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(RPNPY_BUILDDIR)
+$(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)/../librmn -Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
+	cp $(lastword $^) $(dir $@)
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@) #-Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
 	rm -f *.o
 
 
@@ -89,10 +90,12 @@ $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) make
 	touch $@
 
-$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include gfortran
+$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include mingw-gfortran
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/lib/ make
 	touch $@
+#	cd $</src && \
+#	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
 
 $(LIBRMN_BUILDDIR): librmn librmn.patch
 	rm -Rf $@
@@ -152,3 +155,20 @@ gcc-$(GFORTRAN_VERSION).tar.xz:
 gcc-4.8-infrastructure.tar.xz:
 	wget http://gfortran.meteodat.ch/download/x86_64/$@
 
+######################################################################
+# The following stuff is required for compiling vgrid for Windows.
+# The default mingw-w64 package on Ubuntu 14.04 has the same problem as
+# the gfortran package in the section above - so, need to download
+# a local copy.
+MINGW_GFORTRAN_DIR = gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64
+mingw-gfortran: $(MINGW_GFORTRAN_DIR)
+
+$(MINGW_GFORTRAN_DIR): $(MINGW_GFORTRAN_DIR).deb
+	dpkg-deb -x $< $@
+	cd $@/usr/bin && ln -s $(GFORTRAN)-win32 $(GFORTRAN)
+	touch $@
+	
+$(MINGW_GFORTRAN_DIR).deb:
+	ls -l $@
+	exit 1
+	#wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64.deb

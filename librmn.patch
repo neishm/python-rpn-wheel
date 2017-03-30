@@ -226,7 +226,7 @@ index 424b8b6..fbb566c 100755
  done
 +mv ${libdir}/${EC_ARCH}/${libname}_tmp.a ${libdir}/${EC_ARCH}/${libname}.a
 diff --git a/primitives/Makefile b/primitives/Makefile
-index 67815f3..d1e4ce3 100644
+index 67815f3..ece7b2d 100644
 --- a/primitives/Makefile
 +++ b/primitives/Makefile
 @@ -39,7 +39,7 @@ TARRLS = beta
@@ -267,7 +267,7 @@ index 67815f3..d1e4ce3 100644
 -         $(TEMPLIB)(crc32_.o)          $(TEMPLIB)(crc_16_24_32.o)   $(TEMPLIB)(dlfcn.o)           $(TEMPLIB)(DlInterface.o)\
 -         $(TEMPLIB)(register_dl_routines.o) $(TEMPLIB)(msg.o)       $(TEMPLIB)(new_second.o)      $(TEMPLIB)(cpu_type.o)\
 -         $(TEMPLIB)(get_endian.o)      $(TEMPLIB)(plugin_code.o)
-+locallib: gen_ec_arch_dir $(TEMPLIB)(c_baseio.o) $(TEMPLIB)(f_baseio.o) $(TEMPLIB)(prog_filename.o) $(TEMPLIB)(rah2char.o) $(TEMPLIB)(tracebck.o) $(TEMPLIB)(qqexit.o) $(TEMPLIB)(up2low.o) $(TEMPLIB)(ieeepak.o) $(TEMPLIB)(wkoffit.o) $(TEMPLIB)(c_env_var_cracker.o) $(TEMPLIB)(getenvc.o) $(TEMPLIB)(pointers_and_addresses.o) $(TEMPLIB)(fread32.o)
++locallib: gen_ec_arch_dir $(TEMPLIB)(c_baseio.o) $(TEMPLIB)(f_baseio.o) $(TEMPLIB)(prog_filename.o) $(TEMPLIB)(rah2char.o) $(TEMPLIB)(tracebck.o) $(TEMPLIB)(qqexit.o) $(TEMPLIB)(up2low.o) $(TEMPLIB)(ieeepak.o) $(TEMPLIB)(wkoffit.o) $(TEMPLIB)(c_env_var_cracker.o) $(TEMPLIB)(getenvc.o) $(TEMPLIB)(pointers_and_addresses.o) $(TEMPLIB)(fread32.o) $(TEMPLIB)(msg.o)
 +#locallib: gen_ec_arch_dir \
 +#         $(TEMPLIB)(c_baseio.o)        $(TEMPLIB)(c_ccard.o)        $(TEMPLIB)(constnt.o)         $(TEMPLIB)(dmms.o) \
 +#         $(TEMPLIB)(exdb.o)            $(TEMPLIB)(fread32.o) \
