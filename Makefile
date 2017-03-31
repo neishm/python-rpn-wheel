@@ -13,10 +13,10 @@ RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).%
 LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).%
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
-LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/librmn/lib$(LIBRMN_SHARED_NAME).dll
+LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).dll
 LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).%
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
-LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/vgd/libdescripshared_$(VGRID_VERSION).dll
+LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).dll
 
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBRMN_SHARED) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC) $(LIBDESCRIP_SHARED)
 
@@ -64,6 +64,12 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	cp setup.cfg $@
 	git apply $<.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
+	mkdir -p $@/lib/rpnpy/_sharedlibs
+	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libgcc_s_sjlj-1.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libgfortran-3.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libquadmath-0.dll $@/lib/rpnpy/_sharedlibs/
 
 
 ######################################################################
@@ -71,14 +77,13 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	cp $(lastword $^) $(dir $@)
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@) #-Wl,-rpath,'$$ORIGIN/../librmn' -Wl,-z,origin
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@) #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
 	rm -f *.o
 
 

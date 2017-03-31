@@ -28,8 +28,7 @@ setup (
   package_dir = {'':'lib'},
   install_requires = ['numpy','pytz'],
   package_data = {
-    'rpnpy.librmn': ['*.so'],
-    'rpnpy.vgd': ['*.so'],
+    'rpnpy._sharedlibs': ['*.so','*.dll'],
   },
   distclass=BinaryDistribution
 )
