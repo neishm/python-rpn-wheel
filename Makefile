@@ -169,6 +169,4 @@ $(MINGW_GFORTRAN_DIR): $(MINGW_GFORTRAN_DIR).deb
 	touch $@
 	
 $(MINGW_GFORTRAN_DIR).deb:
-	ls -l $@
-	exit 1
-	#wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64.deb
+	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64.deb
