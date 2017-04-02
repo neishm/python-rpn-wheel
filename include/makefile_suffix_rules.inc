@@ -1,24 +1,6 @@
-GFORTRAN = gfortran
-GCC = gcc
+include $(PROJECT_ROOT)/include/platforms.mk
 
-ifeq ($(ARCH),linux_x86_64)
-  ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
-  CFLAGS := $(CFLAGS) -m64
-  FFLAGS := $(FFLAGS) -m64
-else ifeq ($(ARCH),linux_i686)
-  ARCH_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_gfortran
-  CFLAGS := $(CFLAGS) -m32
-  FFLAGS := $(FFLAGS) -m32
-else ifeq ($(ARCH),win32)
-  ARCH_MACRO_DIR = $(PROJECT_ROOT)/include/Windows32_gfortran
-  GCC = i686-w64-mingw32-gcc
-  GFORTRAN = i686-w64-mingw32-gfortran
-else ifeq ($(ARCH),)
-  $(error $$ARCH is not defined.)
-else
-  $(error unrecognized ARCH value '$(ARCH)')
-endif
-INC = -I. -I$(PROJECT_ROOT)/env-include -I$(ARCH_MACRO_DIR) -I$(PROJECT_ROOT)/librmn/PUBLIC_INCLUDES
+INC = -I. -I$(PROJECT_ROOT)/env-include -I$(RPN_MACRO_DIR) -I$(PROJECT_ROOT)/librmn/PUBLIC_INCLUDES
 
 COMPILE_C = $(GCC) -fPIC -O$(OPTIMIZ) $(DEFINE) $(CFLAGS) $(INC) $(xSUPP_OPT) $(xC_SUPP_OPT) -c $<
 

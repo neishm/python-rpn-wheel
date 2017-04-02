@@ -3,53 +3,37 @@
 # the CMC network.
 # See README.md for proper usage.
 
+include include/platforms.mk
+
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
 
 # Locations to build static / shared libraries.
 # Here, '%' is a pattern rule to match a particlar architecture.
-RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).%
-LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).%
+RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
+LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).$(PLATFORM)
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
-LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).dll
-LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).%
+LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME)
+LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).$(PLATFORM)
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
-LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).dll
+LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION)
 
-.PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBRMN_SHARED) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC) $(LIBDESCRIP_SHARED)
+.PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
 
-# Using the above convention, we can extract the particular architecture from
-# the build targets (it should be the suffix of the top-level directory).
-ARCH_FROM_BUILDDIR = $(subst .,,$(suffix $(firstword $(subst /, ,$<))))
-
+.SUFFIXES:
 .PHONY: all wheels gfortran
 
 ######################################################################
 # Rules for building the final package.
 
-all: wheels
+all: wheel-win32
 
-# All wheel architectures that we can build for.
-#wheels: wheel-linux_x86_64 wheel-linux_i686
-wheels: wheel-win32
+wheel-$(PLATFORM): $(RPNPY_BUILDDIR) $(LIBRMN_SHARED).$(SHAREDLIB_SUFFIX) $(LIBDESCRIP_SHARED).$(SHAREDLIB_SUFFIX) local_env
+	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(PLATFORM)
+	exit 0
 
-wheel-%: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) local_env
-	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(ARCH_FROM_BUILDDIR)
-
-# Need extra build parameters for specific architectures.
-# Note: this should be consistent with include/makefile_suffix_rules.inc
-wheel-linux_i686: FFLAGS := $(FFLAGS) -m32
-wheel-linux_x86_64: FFLAGS := $(FFLAGS) -m64
-#wheel-win32: FFLAGS := $(FFLAGS) -m32
-
-wheel-linux%: SHAREDLIB_SUFFIX = so
-wheel-win%: SHAREDLIB_SUFFIX = dll
-
-wheel-linux%: GFORTRAN = gfortran
-wheel-win32: GFORTRAN = i686-w64-mingw32-gfortran
-wheel-win_amd64: GFORTRAN = x86_64-w64-mingw32-gfortran
 
 # Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
 # Tested on wheel v0.29
@@ -66,21 +50,22 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libgcc_s_sjlj-1.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libgfortran-3.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/i686-w64-mingw32/lib/libwinpthread-1.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/lib/gcc/i686-w64-mingw32/4.8/libquadmath-0.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libgcc_s_sjlj-1.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libgfortran-3.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/$(ARCH)-w64-mingw32/lib/libwinpthread-1.dll $@/lib/rpnpy/_sharedlibs/
+	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libquadmath-0.dll $@/lib/rpnpy/_sharedlibs/
 
 
 ######################################################################
 # Rules for building the required shared libraries.
-$(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
+
+$(LIBRMN_SHARED).dll: $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
 	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
 	rm -f *.o
 
-$(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
+$(LIBDESCRIP_SHARED).dll: $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED).dll
 	rm -f *.o
 	ar -x $<
 	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@) #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
@@ -92,12 +77,12 @@ $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 
 $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
 	cd $< && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
 $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include mingw-gfortran
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/lib/ make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/lib/ make
 	touch $@
 #	cd $</src && \
 #	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
