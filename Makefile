@@ -23,7 +23,7 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
 
 .SUFFIXES:
-.PHONY: all wheel extra-libs gfortran
+.PHONY: all wheel extra-libs
 
 ######################################################################
 # Rules for building the final package.
@@ -89,6 +89,49 @@ $(EXTRA_LIB_DEST)/libwinpthread-1.dll : $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
 endif
 
 ######################################################################
+# The stuff below is for getting an updated version of gfortran.
+# This is needed for compiling the vgrid code in Ubuntu 14.04.
+# It may not be required for Ubuntu 16.04, so if you have a mroe recent
+# distribution you can probably remove this section, and remove the gfortran-
+# related stuff from the $(LIBDESCRIP_STATIC) rule.
+ifeq ($(OS),linux)
+LOCAL_GFORTRAN_DIR = gcc-4.9.4
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
+LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
+LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
+$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).tar.xz $(LOCAL_GFORTRAN_EXTRA)
+	tar -xJvf $<
+	tar -xJvf $(LOCAL_GFORTRAN_EXTRA) -C $@
+	mv $@/bin $@/bin.orig
+	mkdir $@/bin
+	cd $@/bin && ln -s ../bin.orig/gfortran .
+	touch $@
+$(LOCAL_GFORTRAN_DIR).tar.xz:
+	wget http://gfortran.meteodat.ch/download/x86_64/releases/$@
+$(LOCAL_GFORTRAN_EXTRA):
+	wget http://gfortran.meteodat.ch/download/x86_64/$@
+
+else ifeq ($(OS),win)
+ifeq ($(PLATFORM),win32)
+LOCAL_GFORTRAN_DIR = gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64
+else ifeq ($(PLATFORM),win_amd64)
+LOCAL_GFORTRAN_DIR = gfortran-mingw-w64-x86-64_4.9.1-19+14.3_amd64
+endif
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/usr/lib
+LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/usr/bin
+$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).deb
+	dpkg-deb -x $< $@
+	cd $@/usr/bin && ln -s $(GFORTRAN)-win32 $(GFORTRAN)
+	touch $@
+$(LOCAL_GFORTRAN_DIR).deb:
+	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/$@
+
+endif
+#
+######################################################################
+
+
+######################################################################
 # Rules for building the static libraries from source.
 
 $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
@@ -96,17 +139,15 @@ $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
-$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(MINGW_GFORTRAN_DIR)
+$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/$(MINGW_GFORTRAN_DIR)/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/$(MINGW_GFORTRAN_DIR)/usr/lib/ make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(PWD)/$(LOCAL_GFORTRAN_LIB) make
 	touch $@
-#	cd $</src && \
-#	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
 
-$(LIBRMN_BUILDDIR): librmn librmn.patch
+$(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 	rm -Rf $@
 	git -C $< archive --prefix=$@/ Release-$(LIBRMN_VERSION) | tar -xv
-	git apply $<.patch --directory=$@
+	git apply $<.$(OS).patch --directory=$@
 
 $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 	rm -Rf $@
@@ -135,48 +176,4 @@ vgrid:
 env-include:
 	git clone joule:/home/dormrb02/GIT-depots/env-include.git
 
-
-######################################################################
-# The stuff below is for getting an updated version of gfortran.
-# This is needed for compiling the vgrid code in Ubuntu 14.04.
-# It may not be required for Ubuntu 16.04, so if you have a mroe recent
-# distribution you can probably remove this section, and remove the gfortran-
-# related stuff from the $(LIBDESCRIP_STATIC) rule.
-
-GFORTRAN_VERSION = 4.9.4
-
-gfortran: gcc-$(GFORTRAN_VERSION)
-
-gcc-$(GFORTRAN_VERSION): gcc-$(GFORTRAN_VERSION).tar.xz gcc-4.8-infrastructure.tar.xz
-	tar -xJvf gcc-$(GFORTRAN_VERSION).tar.xz
-	tar -xJvf gcc-4.8-infrastructure.tar.xz -C $@
-	mv $@/bin $@/bin.orig
-	mkdir $@/bin
-	cd $@/bin && ln -s ../bin.orig/gfortran .
-	touch $@
-
-gcc-$(GFORTRAN_VERSION).tar.xz:
-	wget http://gfortran.meteodat.ch/download/x86_64/releases/$@
-
-gcc-4.8-infrastructure.tar.xz:
-	wget http://gfortran.meteodat.ch/download/x86_64/$@
-
-######################################################################
-# The following stuff is required for compiling vgrid for Windows.
-# The default mingw-w64 package on Ubuntu 14.04 has the same problem as
-# the gfortran package in the section above - so, need to download
-# a local copy.
-ifeq ($(ARCH),i686)
-MINGW_GFORTRAN_DIR = gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64
-else ifeq ($(ARCH),x86_64)
-MINGW_GFORTRAN_DIR = gfortran-mingw-w64-x86-64_4.9.1-19+14.3_amd64
-endif
-
-$(MINGW_GFORTRAN_DIR): $(MINGW_GFORTRAN_DIR).deb
-	dpkg-deb -x $< $@
-	cd $@/usr/bin && ln -s $(GFORTRAN)-win32 $(GFORTRAN)
-	touch $@
-	
-$(MINGW_GFORTRAN_DIR).deb:
-	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/$@
 
