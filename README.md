@@ -6,12 +6,17 @@ The purpose of this tool is to compile and package [Python-RPN](https://github.c
 
 How to use
 ==========
-To generate a wheel file, run:
+To generate wheel files for all platforms, run:
 ```
 make
 ```
 
-If you're lucky, this will generate some `.whl` files.
+To generate a wheel for a particular platform:
+```
+make PLATFORM=linux_x86_64
+```
+
+Available target platforms are `linux_x86_64`, `linux_i686`, `win_amd64`, `win32`.
 You can try installing this wheel file on another system (or in a virtualenv) and test it out.
 The easiest way to install is through `pip`:
 ```
