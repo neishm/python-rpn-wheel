@@ -1,5 +1,5 @@
 diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
-index 78573a7..36aef30 100755
+index 78573a7..9df36b1 100755
 --- a/lib/rpnpy/librmn/__init__.py
 +++ b/lib/rpnpy/librmn/__init__.py
 @@ -79,19 +79,24 @@ def loadRMNlib(rmn_version=None):
@@ -29,7 +29,15 @@ index 78573a7..36aef30 100755
              RMN_LIBPATH = checkRMNlibPath(os.path.join(path.strip(), rmn_libfile))
              if RMN_LIBPATH:
                  break
-@@ -106,6 +111,7 @@ def loadRMNlib(rmn_version=None):
+@@ -99,6 +104,7 @@ def loadRMNlib(rmn_version=None):
+     if not RMN_LIBPATH:
+         raise IOError, (-1, 'Failed to find librmn.so: ', rmn_libfile)
+ 
++    RMN_LIBPATH = os.path.abspath(RMN_LIBPATH)
+     librmn = None
+     try:
+         librmn = ct.cdll.LoadLibrary(RMN_LIBPATH)
+@@ -106,6 +112,7 @@ def loadRMNlib(rmn_version=None):
      except IOError:
          raise IOError('ERROR: cannot load librmn shared version: ' +
                        RMN_VERSION)
