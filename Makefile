@@ -73,8 +73,22 @@ $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 
 ######################################################################
 # Extra libraries needed at runtime.
+# Copy these into the package so they're always available.
 EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
-ifeq ($(OS),win)
+
+ifeq ($(OS),linux)
+extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3 libquadmath.so.0)
+ifeq ($(ARCH),x86_64)
+EXTRA_LIB_SRC = /usr/lib32
+else ifeq ($(ARCH),i686)
+EXTRA_LIB_SRC = /usr/lib/x86_64-linux-gnu
+endif
+$(EXTRA_LIB_DEST)/libgfortran.so.3 : $(EXTRA_LIB_SRC)/libgfortran.so.3
+	cp $< $@
+$(EXTRA_LIB_DEST)/libquadmath.so.0 : $(EXTRA_LIB_SRC)/libquadmath.so.0
+	cp $< $@
+
+else ifeq ($(OS),win)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
 extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_sjlj-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
@@ -148,11 +162,13 @@ $(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 	rm -Rf $@
 	git -C $< archive --prefix=$@/ Release-$(LIBRMN_VERSION) | tar -xv
 	git apply $<.$(OS).patch --directory=$@
+	touch $@
 
 $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 	rm -Rf $@
 	git -C $< archive --prefix=$@/ $(VGRID_VERSION) | tar -xv
 	git apply $<.patch --directory=$@
+	touch $@
 
 
 ######################################################################

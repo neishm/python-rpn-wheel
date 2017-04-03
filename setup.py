@@ -28,7 +28,7 @@ setup (
   package_dir = {'':'lib'},
   install_requires = ['numpy','pytz'],
   package_data = {
-    'rpnpy._sharedlibs': ['*.so','*.dll'],
+    'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
   },
   distclass=BinaryDistribution
 )

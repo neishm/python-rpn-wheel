@@ -31,10 +31,5 @@ You will also need `perl`, which vgrid needs to generate its *dependencies.mk* f
 
 And, you'll need `python-virtualenv`, in order to build the packages with a more recent `wheel` module.
 
-Limitations
-===========
-This tool is designed to be used on a `Linux x86-64` system.
-It has only been tested on `Ubuntu 14.04` so far.
-
-Currently, the generated wheels have external library dependencies (`libgfortran.so.3` and `libquadmath.so.0`) which means `libgfortran` will need to be installed as an auxiliary package on the target system.
+This tool will generate wheel files for multiple platforms, but the tool itself is designed to be used on a 64-bit `Ubuntu 14.04` system.
 
