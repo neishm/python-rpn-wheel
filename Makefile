@@ -31,9 +31,31 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 all: wheel
 
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs local_env
-	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(PLATFORM)
-	exit 0
 
+# Linux wheel is straight-forward (we're building on a Linux system!)
+ifeq ($(OS),linux)
+wheel:
+	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=manylinux1_x86_64 --dist-dir=$(PWD)
+
+# Need to massage the Windows wheels to have the right ABI tag.
+else ifeq ($(OS),win)
+ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/rpnpy-$(RPNPY_VERSION)-cp27-cp27mu-$(PLATFORM).whl
+FINAL_WHEEL = rpnpy-$(RPNPY_VERSION)-cp27-cp27m-$(PLATFORM).whl
+WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION).dist-info
+wheel:
+	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
+	rm -Rf $(WHEEL_TMPDIR)
+	mkdir $(WHEEL_TMPDIR)
+	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(ORIG_WHEEL)
+	# Fix the ABI tag
+	sed -i 's/cp27mu/cp27m/' $(WHEEL_TMPDIST)/WHEEL
+	# Update SHA-1 sums for the RECORD file.
+	rm -Rf $(WHEEL_TMPDIST)/RECORD
+	./local_env/bin/python -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
+	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(FINAL_WHEEL) .
+
+endif
 
 # Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
 # Tested on wheel v0.29
@@ -41,6 +63,7 @@ local_env:
 	virtualenv $@
 	$@/bin/pip install "wheel>=0.29.0"
 
+# Set up the build directory (does everything except the actual build).
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
 	git -C $< archive --prefix=$@/ python-rpn_$(RPNPY_VERSION) | tar -xv
