@@ -12,6 +12,7 @@ else ifeq ($(PLATFORM),linux_i686)
   OS = linux
   GCC = gcc
   CFLAGS := $(CFLAGS) -m32
+  GFORTRAN = gfortran
   FFLAGS := $(FFLAGS) -m32
   SHAREDLIB_SUFFIX = so
   RPN_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_gfortran

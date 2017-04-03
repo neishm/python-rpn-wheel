@@ -15,22 +15,22 @@ RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
 LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).$(PLATFORM)
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
-LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME)
+LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).$(SHAREDLIB_SUFFIX)
 LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).$(PLATFORM)
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
-LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION)
+LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).$(SHAREDLIB_SUFFIX)
 
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
 
 .SUFFIXES:
-.PHONY: all wheels gfortran
+.PHONY: all wheel extra-libs gfortran
 
 ######################################################################
 # Rules for building the final package.
 
-all: wheel-win32
+all: wheel
 
-wheel-$(PLATFORM): $(RPNPY_BUILDDIR) $(LIBRMN_SHARED).$(SHAREDLIB_SUFFIX) $(LIBDESCRIP_SHARED).$(SHAREDLIB_SUFFIX) local_env
+wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs local_env
 	cd $< && $(PWD)/local_env/bin/python setup.py bdist_wheel --dist-dir=$(PWD) --plat-name=$(PLATFORM)
 	exit 0
 
@@ -50,27 +50,43 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libgcc_s_sjlj-1.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libgfortran-3.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/$(ARCH)-w64-mingw32/lib/libwinpthread-1.dll $@/lib/rpnpy/_sharedlibs/
-	cp /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8/libquadmath-0.dll $@/lib/rpnpy/_sharedlibs/
 
 
 ######################################################################
 # Rules for building the required shared libraries.
 
-$(LIBRMN_SHARED).dll: $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
+# Linux shared libraries need to be explicitly told to look in their current path for dependencies.
+%.so: FFLAGS := $(FFLAGS) -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
+
+$(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o
 	rm -f *.o
 
-$(LIBDESCRIP_SHARED).dll: $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED).dll
+$(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@) #-Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
 	rm -f *.o
 
+
+######################################################################
+# Extra libraries needed at runtime.
+EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
+ifeq ($(OS),win)
+EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8
+EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_sjlj-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
+$(EXTRA_LIB_DEST)/libgcc_s_sjlj-1.dll : $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll
+	cp $< $@
+$(EXTRA_LIB_DEST)/libgfortran-3.dll : $(EXTRA_LIB_SRC1)/libgfortran-3.dll
+	cp $< $@
+$(EXTRA_LIB_DEST)/libquadmath-0.dll : $(EXTRA_LIB_SRC1)/libquadmath-0.dll
+	cp $< $@
+$(EXTRA_LIB_DEST)/libwinpthread-1.dll : $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
+	cp $< $@
+endif
 
 ######################################################################
 # Rules for building the static libraries from source.
@@ -80,9 +96,9 @@ $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
-$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include mingw-gfortran
+$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(MINGW_GFORTRAN_DIR)
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64/usr/lib/ make
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/$(MINGW_GFORTRAN_DIR)/usr/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/$(MINGW_GFORTRAN_DIR)/usr/lib/ make
 	touch $@
 #	cd $</src && \
 #	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) ARCH=$(ARCH_FROM_BUILDDIR) PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/bin:$(PATH) LD_LIBRARY_PATH=$(PWD)/gcc-$(GFORTRAN_VERSION)/lib64 make
@@ -150,8 +166,11 @@ gcc-4.8-infrastructure.tar.xz:
 # The default mingw-w64 package on Ubuntu 14.04 has the same problem as
 # the gfortran package in the section above - so, need to download
 # a local copy.
+ifeq ($(ARCH),i686)
 MINGW_GFORTRAN_DIR = gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64
-mingw-gfortran: $(MINGW_GFORTRAN_DIR)
+else ifeq ($(ARCH),x86_64)
+MINGW_GFORTRAN_DIR = gfortran-mingw-w64-x86-64_4.9.1-19+14.3_amd64
+endif
 
 $(MINGW_GFORTRAN_DIR): $(MINGW_GFORTRAN_DIR).deb
 	dpkg-deb -x $< $@
@@ -159,4 +178,5 @@ $(MINGW_GFORTRAN_DIR): $(MINGW_GFORTRAN_DIR).deb
 	touch $@
 	
 $(MINGW_GFORTRAN_DIR).deb:
-	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64.deb
+	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/$@
+
