@@ -14,9 +14,17 @@ all:
 	make PLATFORM=linux_i686
 	make PLATFORM=win_amd64
 	make PLATFORM=win32
+clean:
+	make clean PLATFORM=linux_x86_64
+	make clean PLATFORM=linux_i686
+	make clean PLATFORM=win_amd64
+	make clean PLATFORM=win32
 else
 include include/platforms.mk
 all: wheel
+clean:
+	rm -f *.o *.whl
+	rm -Rf *.$(PLATFORM)
 endif
 
 # Locations to build static / shared libraries.
