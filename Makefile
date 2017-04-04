@@ -20,7 +20,6 @@ all: wheel
 endif
 
 # Locations to build static / shared libraries.
-# Here, '%' is a pattern rule to match a particlar architecture.
 RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
 LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).$(PLATFORM)
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
@@ -43,7 +42,7 @@ wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs local_
 # Linux wheel is straight-forward (we're building on a Linux system!)
 ifeq ($(OS),linux)
 wheel:
-	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=manylinux1_x86_64 --dist-dir=$(PWD)
+	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=manylinux1_$(ARCH) --dist-dir=$(PWD)
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
@@ -136,7 +135,7 @@ endif
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
 # This is needed for compiling the vgrid code in Ubuntu 14.04.
-# It may not be required for Ubuntu 16.04, so if you have a mroe recent
+# It may not be required for Ubuntu 16.04, so if you have a more recent
 # distribution you can probably remove this section, and remove the gfortran-
 # related stuff from the $(LIBDESCRIP_STATIC) rule.
 ifeq ($(OS),linux)
