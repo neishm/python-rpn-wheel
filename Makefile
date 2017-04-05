@@ -213,13 +213,13 @@ $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 # Rules for getting the required source packages.
 
 python-rpn:
-	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION) && \
+	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION)
 
 librmn:
-	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION) && \
+	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION)
 
 vgrid:
-	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION) && \
+	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION)
 
 # This is needed for compiling librmn.  It has some crucial headers like
 # rpnmacros.h.
