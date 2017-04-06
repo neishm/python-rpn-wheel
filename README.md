@@ -6,7 +6,14 @@ The purpose of this tool is to compile and package [Python-RPN](https://github.c
 
 How to use
 ==========
-To generate wheel files for all platforms, run:
+These instructions assume you are on an `Ubuntu 14.04` system.
+
+First, make sure you have all the dependencies:
+```
+sudo apt-get install gcc-multilib gfortran-multilib gcc-mingw-w64 gfortran-mingw-w64 perl python-virtualenv wget dpkg
+```
+
+To generate wheel files for multiple platforms, run:
 ```
 make
 ```
@@ -27,14 +34,17 @@ Requirements
 ============
 This tool will automatically download a copy of `Python-RPN`, `librmn`, and `vgrid`.
 
-You'll need `gcc-multilib` and `gfortran-multilib` to compile both the 32-bit and 64-bit versions of the wheels.
-You'll also need `gcc-mingw-w64` and `gfortran-mingw-w64` to compile for Windows.
-
 If you're within the CMC network, then the tool will automatically copy the `env-include` package, which is needed for compiling *librmn*.  If you're not within the CMC network, then you'll need to acquire this package yourself.
 
-You will also need `perl`, which vgrid needs to generate its *dependencies.mk* file.
+Limitations
+===========
+This tool only builds for Linux and Windows platforms, and may not cover all
+permutations of those ABI tags.
+Please file a bug report if it won't work on your particular system.
 
-And, you'll need `python-virtualenv`, in order to build the packages with a more recent `wheel` module.
+There is no support for Mac OS X yet.  I don't have access to a Mac box, and
+can't find any reliable tools for cross-compiling from Linux.
 
 This tool will generate wheel files for multiple platforms, but the tool itself is designed to be used on a 64-bit `Ubuntu 14.04` system.
+Other host systems have not been tested yet.
 
