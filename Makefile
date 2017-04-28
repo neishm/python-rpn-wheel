@@ -4,6 +4,7 @@
 # See README.md for proper usage.
 
 FSTD2NC_VERSION = 0-20170427
+FSTD2NC_PYPI_VERSION = 0.20170427.0
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
@@ -55,10 +56,10 @@ wheel:
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
-ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/rpnpy-$(RPNPY_VERSION)-cp27-cp27mu-$(PLATFORM).whl
-FINAL_WHEEL = rpnpy-$(RPNPY_VERSION)-cp27-cp27m-$(PLATFORM).whl
+ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27mu-$(PLATFORM).whl
+FINAL_WHEEL = fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27m-$(PLATFORM).whl
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION).dist-info
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc-$(FSTD2NC_PYPI_VERSION).dist-info
 wheel:
 	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
 	rm -Rf $(WHEEL_TMPDIR)
