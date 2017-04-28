@@ -33,10 +33,10 @@ For more information on Python-RPN, see https://github.com/meteokid/python-rpn
   classifiers = [
     'Development Status :: 3 - Alpha',
     'Environment :: Console',
-    'Intended Audience :: Science/Research'
+    'Intended Audience :: Science/Research',
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Operating System :: POSIX :: Linux',
-    'Operating System :: Microsoft :: Windows'
+    'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python :: 2.7',
     'Topic :: Scientific/Engineering :: Atmospheric Science',
   ],
