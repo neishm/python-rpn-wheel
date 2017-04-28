@@ -3,6 +3,7 @@
 # the CMC network.
 # See README.md for proper usage.
 
+FSTD2NC_VERSION = 0-20170427
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
@@ -79,7 +80,7 @@ local_env:
 	$@/bin/pip install "wheel>=0.29.0"
 
 # Set up the build directory (does everything except the actual build).
-$(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
+$(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch pygeode-rpn
 	rm -Rf $@
 	git -C $< archive --prefix=$@/ python-rpn_$(RPNPY_VERSION) | tar -xv
 	cp setup.py $@
@@ -88,6 +89,7 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+	git -C pygeode-rpn archive --prefix=$@/lib/ fstd2nc_$(FSTD2NC_VERSION) | tar -xv
 
 
 ######################################################################
@@ -211,6 +213,9 @@ $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 
 ######################################################################
 # Rules for getting the required source packages.
+
+pygeode-rpn:
+	git clone https://github.com/neishm/pygeode-rpn.git -b fstd2nc_$(FSTD2NC_VERSION)
 
 python-rpn:
 	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION)

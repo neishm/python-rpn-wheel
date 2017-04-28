@@ -1,9 +1,4 @@
 from setuptools import setup, Distribution, find_packages
-import sys
-
-# Add './lib' to the search path, so we can access the version info.
-sys.path.append('lib')
-from rpnpy.version import __VERSION__
 
 # Need to force Python to treat this as a binary distribution.
 # We don't have any binary extension modules, but we do have shared
@@ -16,19 +11,35 @@ class BinaryDistribution(Distribution):
     return False
 
 setup (
-  name = 'rpnpy',
-  version = __VERSION__,
-  description = 'A Python interface for the RPN libraries at Environment and Climate Change Canada',
+  name = 'fstd2nc',
+  version = '0-20170427',
+  description = 'Converts FSTD files (from Environment Canada) to netCDF files.',
   long_description = open('DESCRIPTION').read(),
-  url = 'https://github.com/meteokid/python-rpn',
-  author = 'Stephane Chamberland',
-  license = 'LGPL-2.1',
-  keywords = 'rpnpy python-rpn vgrid libdescrip librmn rmnlib',
+  url = 'https://github.com/neishm/pygeode-rpn/tree/fstd2nc',
+  author = 'Mike Neish',
+  license = 'LGPL-3',
+  classifiers = [
+    'Development Status :: 3 - Alpha',
+    'Environment :: Console',
+    'Intended Audience :: Science/Research'
+    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Microsoft :: Windows'
+    'Programming Language :: Python :: 2.7',
+    'Topic :: Scientific/Engineering :: Atmospheric Science',
+  ],
+  keywords = 'fstd2nc rpnpy',
   packages = find_packages('lib'),
+  py_modules = ['fstd2nc'],
   package_dir = {'':'lib'},
-  install_requires = ['numpy','pytz'],
+  install_requires = ['numpy','pytz','netcdf4'],
   package_data = {
     'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
+  },
+  entry_points={
+    'console_scripts': [
+      'fstd2nc = fstd2nc:_fstd2nc_cmdline',
+    ],
   },
   distclass=BinaryDistribution
 )
