@@ -89,7 +89,11 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch pygeode-rpn
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	git -C pygeode-rpn archive --prefix=$@/lib/ fstd2nc_$(FSTD2NC_VERSION) | tar -xv
+	echo 'import fstd2nc_deps as _deps, os, sys; sys.path.append(os.path.dirname(_deps.__file__)); del _deps, os, sys' > $@/fstd2nc.py
+	git -C pygeode-rpn show fstd2nc_$(FSTD2NC_VERSION):fstd2nc.py >> $@/fstd2nc.py
+	mv $@/lib $@/fstd2nc_deps
+	ln -s $(PWD)/$@/fstd2nc_deps $@/lib
+	touch $@/fstd2nc_deps/__init__.py
 
 
 ######################################################################

@@ -14,7 +14,19 @@ setup (
   name = 'fstd2nc',
   version = '0-20170427',
   description = 'Converts FSTD files (from Environment Canada) to netCDF files.',
-  long_description = open('DESCRIPTION').read(),
+  long_description = """
+Basic usage:
+  fstd2nc <fstd_file> <netcdf_file>
+
+or
+  python -m fstd2nc <fstd_file> <netcdf_file>
+
+Use "-h" for a list of all command-line options.
+
+This package includes an embedded copy of Python-RPN for reading the FSTD
+files.
+For more information on Python-RPN, see https://github.com/meteokid/python-rpn
+""",
   url = 'https://github.com/neishm/pygeode-rpn/tree/fstd2nc',
   author = 'Mike Neish',
   license = 'LGPL-3',
@@ -29,12 +41,11 @@ setup (
     'Topic :: Scientific/Engineering :: Atmospheric Science',
   ],
   keywords = 'fstd2nc rpnpy',
-  packages = find_packages('lib'),
+  packages = find_packages(exclude=['lib*']),
   py_modules = ['fstd2nc'],
-  package_dir = {'':'lib'},
   install_requires = ['numpy','pytz','netcdf4'],
   package_data = {
-    'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
+    'fstd2nc_deps.rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
   },
   entry_points={
     'console_scripts': [
