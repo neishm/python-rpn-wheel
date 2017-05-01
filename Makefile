@@ -117,9 +117,9 @@ EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 ifeq ($(OS),linux)
 extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3 libquadmath.so.0)
 ifeq ($(ARCH),x86_64)
-EXTRA_LIB_SRC = /usr/lib32
-else ifeq ($(ARCH),i686)
 EXTRA_LIB_SRC = /usr/lib/x86_64-linux-gnu
+else ifeq ($(ARCH),i686)
+EXTRA_LIB_SRC = /usr/lib32
 endif
 $(EXTRA_LIB_DEST)/libgfortran.so.3 : $(EXTRA_LIB_SRC)/libgfortran.so.3
 	cp $< $@
