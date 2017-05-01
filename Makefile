@@ -4,7 +4,7 @@
 # See README.md for proper usage.
 
 FSTD2NC_VERSION = 0-20170427
-FSTD2NC_PYPI_VERSION = 0.20170427.0
+FSTD2NC_PYPI_VERSION = 0.20170427.1
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
@@ -52,7 +52,7 @@ wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 # Linux wheel is straight-forward (we're building on a Linux system!)
 ifeq ($(OS),linux)
 wheel:
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel --dist-dir=$(PWD)
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27m/bin/python setup.py bdist_wheel --plat-name=manylinux1_$(ARCH) --dist-dir=$(PWD)
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
