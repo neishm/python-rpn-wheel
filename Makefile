@@ -47,12 +47,12 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 ######################################################################
 # Rule for building the wheel file.
 
-wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs local_env
+wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 
 # Linux wheel is straight-forward (we're building on a Linux system!)
 ifeq ($(OS),linux)
 wheel:
-	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=manylinux1_$(ARCH) --dist-dir=$(PWD)
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel --dist-dir=$(PWD)
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
@@ -83,7 +83,7 @@ local_env:
 # Set up the build directory (does everything except the actual build).
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch pygeode-rpn
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ python-rpn_$(RPNPY_VERSION) | tar -xv
+	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp setup.py $@
 	cp setup.cfg $@
 	git apply $<.patch --directory=$@
@@ -91,7 +91,7 @@ $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch pygeode-rpn
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
 	echo 'import fstd2nc_deps as _deps, os, sys; sys.path.append(os.path.dirname(_deps.__file__)); del _deps, os, sys' > $@/fstd2nc.py
-	git -C pygeode-rpn show fstd2nc_$(FSTD2NC_VERSION):fstd2nc.py >> $@/fstd2nc.py
+	(cd pygeode-rpn && git show fstd2nc_$(FSTD2NC_VERSION):fstd2nc.py) >> $@/fstd2nc.py
 	mv $@/lib $@/fstd2nc_deps
 	ln -s $(PWD)/$@/fstd2nc_deps $@/lib
 	touch $@/fstd2nc_deps/__init__.py
@@ -122,11 +122,11 @@ $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 
 ifeq ($(OS),linux)
-extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3 libquadmath.so.0)
+extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3)
 ifeq ($(ARCH),x86_64)
-EXTRA_LIB_SRC = /usr/lib32
+EXTRA_LIB_SRC = /usr/lib64
 else ifeq ($(ARCH),i686)
-EXTRA_LIB_SRC = /usr/lib/x86_64-linux-gnu
+EXTRA_LIB_SRC = /usr/lib
 endif
 $(EXTRA_LIB_DEST)/libgfortran.so.3 : $(EXTRA_LIB_SRC)/libgfortran.so.3
 	cp $< $@
@@ -154,11 +154,18 @@ endif
 # distribution you can probably remove this section, and remove the gfortran-
 # related stuff from the $(LIBDESCRIP_STATIC) rule.
 ifeq ($(OS),linux)
-LOCAL_GFORTRAN_DIR = gcc-4.9.4
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
-LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
+LOCAL_GFORTRAN_VERSION = gcc-4.9.4
+ifeq ($(ARCH),x86_64)
+LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
-$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).tar.xz $(LOCAL_GFORTRAN_EXTRA)
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
+else ifeq($(ARCH),i686)
+LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)-32bit
+LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
+endif
+LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
+$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_VERSION).tar.xz $(LOCAL_GFORTRAN_EXTRA)
 	tar -xJvf $<
 	tar -xJvf $(LOCAL_GFORTRAN_EXTRA) -C $@
 	mv $@/bin $@/bin.orig
@@ -166,9 +173,9 @@ $(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).tar.xz $(LOCAL_GFORTRAN_EXTRA)
 	cd $@/bin && ln -s ../bin.orig/gfortran .
 	touch $@
 $(LOCAL_GFORTRAN_DIR).tar.xz:
-	wget http://gfortran.meteodat.ch/download/x86_64/releases/$@
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$@
 $(LOCAL_GFORTRAN_EXTRA):
-	wget http://gfortran.meteodat.ch/download/x86_64/$@
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/$@
 
 else ifeq ($(OS),win)
 ifeq ($(PLATFORM),win32)
@@ -205,13 +212,13 @@ $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 
 $(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ Release-$(LIBRMN_VERSION) | tar -xv
+	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
 	git apply $<.$(OS).patch --directory=$@
 	touch $@
 
 $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ $(VGRID_VERSION) | tar -xv
+	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
 	git apply $<.patch --directory=$@
 	touch $@
 
