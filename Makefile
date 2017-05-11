@@ -52,7 +52,12 @@ wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 # Linux wheel is straight-forward (we're building on a Linux system!)
 ifeq ($(OS),linux)
 wheel:
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27m/bin/python setup.py bdist_wheel --plat-name=manylinux1_$(ARCH) --dist-dir=$(PWD)
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
@@ -60,7 +65,7 @@ ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27mu-
 FINAL_WHEEL = fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27m-$(PLATFORM).whl
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc-$(FSTD2NC_PYPI_VERSION).dist-info
-wheel:
+wheel: local_env
 	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
 	rm -Rf $(WHEEL_TMPDIR)
 	mkdir $(WHEEL_TMPDIR)
@@ -164,16 +169,18 @@ LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)-32bit
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
 endif
+LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
 LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
-$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_VERSION).tar.xz $(LOCAL_GFORTRAN_EXTRA)
-	tar -xJvf $<
-	tar -xJvf $(LOCAL_GFORTRAN_EXTRA) -C $@
+$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_TAR) $(LOCAL_GFORTRAN_EXTRA)
+	xzdec $< | tar -xv
+	xzdec $(LOCAL_GFORTRAN_EXTRA) | tar -xv -C $@
 	mv $@/bin $@/bin.orig
 	mkdir $@/bin
 	cd $@/bin && ln -s ../bin.orig/gfortran .
 	touch $@
-$(LOCAL_GFORTRAN_DIR).tar.xz:
-	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$@
+$(LOCAL_GFORTRAN_TAR):
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$(LOCAL_GFORTRAN_VERSION).tar.xz
+	mv $(LOCAL_GFORTRAN_VERSION).tar.xz $@
 $(LOCAL_GFORTRAN_EXTRA):
 	wget http://gfortran.meteodat.ch/download/$(ARCH)/$@
 

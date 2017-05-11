@@ -12,7 +12,7 @@ Steps for building with the 64-bit docker image:
 -----------------------------------------------
 sudo docker run -v $PWD:/io -it $DOCKER_IMAGE bash
 (then, re-create your user/group id)
-yum install -y perl-URI
+yum install -y perl-URI xz.x86_64
 su <username>
 make PLATFORM=linux_x86_64
 
@@ -27,8 +27,7 @@ Steps for building with the 32-bit docker image:
 PRE_CMD=linux32
 sudo docker run -v $PWD:/io -it $DOCKER_IMAGE $PRE_CMD bash
 (then, re-create your user/group id)
-yum install -y perl-URI
-yum install gcc-gfortran.i386
+yum install -y perl-URI xz.i386 gcc-gfortran.i386
 su <username>
 make PLATFORM=linux_i686
 
