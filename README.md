@@ -10,21 +10,20 @@ These instructions assume you are on an `Ubuntu 14.04` system.
 
 First, make sure you have all the dependencies:
 ```
-sudo apt-get install gcc-multilib gfortran-multilib gcc-mingw-w64 gfortran-mingw-w64 perl python-virtualenv wget dpkg
+sudo apt-get install docker.io gcc-mingw-w64 gfortran-mingw-w64 perl python-virtualenv wget dpkg
 ```
 
-To generate wheel files for multiple platforms, run:
+To generate wheel files for Windows, run:
 ```
-make
-```
-
-To generate a wheel for a particular platform:
-```
-make PLATFORM=linux_x86_64
+make PLATFORM=win32
+make PLATFORM=win_amd64
 ```
 
-Available target platforms are `linux_x86_64`, `linux_i686`, `win_amd64`, `win32`.
-You can try installing this wheel file on another system (or in a virtualenv) and test it out.
+To generate a wheel for Linux, you need to run `make` from the `manylinux1` docker container.  See `docker.txt` for details on setting up the container.
+
+The final wheel files are saved in the `wheelhouse/` directory.
+
+You can try installing the wheel files on another system (or in a virtualenv) and test it out.
 The easiest way to install is through `pip`:
 ```
 pip install <filename>.whl
@@ -44,7 +43,4 @@ Please file a bug report if it won't work on your particular system.
 
 There is no support for Mac OS X yet.  I don't have access to a Mac box, and
 can't find any reliable tools for cross-compiling from Linux.
-
-This tool will generate wheel files for multiple platforms, but the tool itself is designed to be used on a 64-bit `Ubuntu 14.04` system.
-Other host systems have not been tested yet.
 
