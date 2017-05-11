@@ -75,7 +75,8 @@ wheel: local_env
 	# Update SHA-1 sums for the RECORD file.
 	rm -Rf $(WHEEL_TMPDIST)/RECORD
 	./local_env/bin/python -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
-	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(FINAL_WHEEL) .
+	mkdir -p $(PWD)/wheelhouse
+	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/wheelhouse/$(FINAL_WHEEL) .
 
 endif
 
