@@ -23,9 +23,11 @@ or
 
 Use "-h" for a list of all command-line options.
 
-This package includes an embedded copy of Python-RPN for reading the FSTD
-files.
-For more information on Python-RPN, see https://github.com/meteokid/python-rpn
+This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and vgrid_ in order to function properly.
+
+.. _Python-RPN: https://github.com/meteokid/python-rpn
+.. _librmn: https://github.com/armnlib/librmn
+.. _vgrid: https://gitlab.com/ECCC_CMDN/vgrid
 """,
   url = 'https://github.com/neishm/pygeode-rpn/tree/fstd2nc',
   author = 'Mike Neish',
