@@ -9,25 +9,11 @@ RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
 
-# If no platform specified, build all platforms.
-ifeq ($(PLATFORM),)
-all:
-	make PLATFORM=linux_x86_64
-	make PLATFORM=linux_i686
-	make PLATFORM=win_amd64
-	make PLATFORM=win32
-clean:
-	make clean PLATFORM=linux_x86_64
-	make clean PLATFORM=linux_i686
-	make clean PLATFORM=win_amd64
-	make clean PLATFORM=win32
-else
 include include/platforms.mk
 all: wheel
 clean:
 	rm -f *.o *.whl
 	rm -Rf *.$(PLATFORM)
-endif
 
 # Locations to build static / shared libraries.
 RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
