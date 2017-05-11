@@ -12,7 +12,7 @@ class BinaryDistribution(Distribution):
 
 setup (
   name = 'fstd2nc',
-  version = '0.20170427.0',
+  version = '0.20170427.1',
   description = 'Converts FSTD files (from Environment Canada) to netCDF files.',
   long_description = """
 Basic usage:
