@@ -29,7 +29,7 @@ This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and 
 .. _librmn: https://github.com/armnlib/librmn
 .. _vgrid: https://gitlab.com/ECCC_CMDN/vgrid
 """,
-  url = 'https://github.com/neishm/pygeode-rpn/tree/fstd2nc',
+  url = 'https://github.com/neishm/fstd2nc',
   author = 'Mike Neish',
   license = 'LGPL-3',
   classifiers = [
