@@ -44,18 +44,23 @@ wheel:
 	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
 	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
 	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	# Python 3 below
 	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp33-cp33m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR).py3
+	cp -R $(RPNPY_BUILDDIR) $(RPNPY_BUILDDIR).py3
+	/opt/python/cp33-cp33m/bin/2to3 -wn $(RPNPY_BUILDDIR).py3
+	#
+	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp33-cp33m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
