@@ -44,6 +44,18 @@ wheel:
 	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
 	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
 	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp33-cp33m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	cd $(RPNPY_BUILDDIR) && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
