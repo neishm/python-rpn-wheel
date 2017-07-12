@@ -11,9 +11,9 @@ class BinaryDistribution(Distribution):
     return False
 
 setup (
-  name = 'fstd2nc',
-  version = '0.20170427.1',
-  description = 'Converts FSTD files (from Environment Canada) to netCDF files.',
+  name="fstd2nc",
+  version=__version__,
+  description = 'Converts RPN standard files (from Environment Canada) to netCDF files.',
   long_description = """
 Basic usage:
   fstd2nc <fstd_file> <netcdf_file>
@@ -30,15 +30,13 @@ This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and 
 .. _vgrid: https://gitlab.com/ECCC_CMDN/vgrid
 """,
   url = 'https://github.com/neishm/fstd2nc',
-  author = 'Mike Neish',
+  author="Mike Neish",
   license = 'LGPL-3',
   classifiers = [
     'Development Status :: 3 - Alpha',
     'Environment :: Console',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-    'Operating System :: POSIX :: Linux',
-    'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python :: 2.7',
     'Topic :: Scientific/Engineering :: Atmospheric Science',
   ],
@@ -47,12 +45,14 @@ This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and 
   py_modules = ['fstd2nc'],
   install_requires = ['numpy','pytz','netcdf4'],
   package_data = {
+    'fstd2nc_locale': ['*/LC_MESSAGES/fstd2nc.mo'],
     'fstd2nc_deps.rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
   },
   entry_points={
     'console_scripts': [
-      'fstd2nc = fstd2nc:_fstd2nc_cmdline',
+      'fstd2nc = fstd2nc:_fstd2nc_cmdline_trapped',
     ],
   },
   distclass=BinaryDistribution
 )
+
