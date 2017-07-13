@@ -11,25 +11,19 @@ class BinaryDistribution(Distribution):
     return False
 
 setup (
-  name="fstd2nc",
+  name="fstd2nc_deps",
   version=__version__,
-  description = 'Converts RPN standard files (from Environment Canada) to netCDF files.',
+  description = 'Dependencies for the fstd2nc package.',
   long_description = """
-Basic usage:
-  fstd2nc <fstd_file> <netcdf_file>
+Provides the Python-RPN_ package, along with the librmn_ and libdescrip_ libraries.
 
-or
-  python -m fstd2nc <fstd_file> <netcdf_file>
-
-Use "-h" for a list of all command-line options.
-
-This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and vgrid_ in order to function properly.
+To access the dependencies in your own scripts, simply add the line
+  import fstd2nc_deps
 
 .. _Python-RPN: https://github.com/meteokid/python-rpn
 .. _librmn: https://github.com/armnlib/librmn
-.. _vgrid: https://gitlab.com/ECCC_CMDN/vgrid
+.. _libdescrip: https://gitlab.com/ECCC_CMDN/vgrid
 """,
-  url = 'https://github.com/neishm/fstd2nc',
   author="Mike Neish",
   license = 'LGPL-3',
   classifiers = [
@@ -37,21 +31,15 @@ This PyPI package also comes with an embedded copy of Python-RPN_, librmn_, and 
     'Environment :: Console',
     'Intended Audience :: Science/Research',
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
+    'Operating System :: POSIX :: Linux',
+    'Operating System :: Microsoft :: Windows',
     'Programming Language :: Python :: 2.7',
     'Topic :: Scientific/Engineering :: Atmospheric Science',
   ],
-  keywords = 'fstd2nc rpnpy',
   packages = find_packages(exclude=['lib*']),
-  py_modules = ['fstd2nc'],
-  install_requires = ['numpy','pytz','netcdf4'],
+  install_requires = ['numpy','pytz'],
   package_data = {
-    'fstd2nc_locale': ['*/LC_MESSAGES/fstd2nc.mo'],
     'fstd2nc_deps.rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
-  },
-  entry_points={
-    'console_scripts': [
-      'fstd2nc = fstd2nc:_fstd2nc_cmdline_trapped',
-    ],
   },
   distclass=BinaryDistribution
 )

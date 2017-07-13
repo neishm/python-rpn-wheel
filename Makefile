@@ -3,8 +3,7 @@
 # the CMC network.
 # See README.md for proper usage.
 
-FSTD2NC_VERSION = 0.20170712
-FSTD2NC_PYPI_VERSION = 0.20170712.0
+FSTD2NC_DEPS_VERSION = 0.20170712.0
 RPNPY_VERSION = 2.0.4
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.1.10
@@ -44,30 +43,30 @@ wheel:
 	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
 	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
 	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	# Python 3 below
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	rm -Rf $(RPNPY_BUILDDIR).py3
-	cp -R $(RPNPY_BUILDDIR) $(RPNPY_BUILDDIR).py3
-	/opt/python/cp33-cp33m/bin/2to3 -wn $(RPNPY_BUILDDIR).py3
-	#
-	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp33-cp33m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
-	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
-	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
-	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+#	# Python 3 below
+#	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+#	rm -Rf $(RPNPY_BUILDDIR).py3
+#	cp -R $(RPNPY_BUILDDIR) $(RPNPY_BUILDDIR).py3
+#	/opt/python/cp33-cp33m/bin/2to3 -wn $(RPNPY_BUILDDIR).py3
+#	#
+#	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp33-cp33m/bin/python setup.py bdist_wheel
+#	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+#	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+#	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
+#	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+#	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+#	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
+#	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
+#	rm -Rf $(RPNPY_BUILDDIR).py3/build $(RPNPY_BUILDDIR).py3/dist
+#	cd $(RPNPY_BUILDDIR).py3 && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
+#	auditwheel repair $(RPNPY_BUILDDIR).py3/dist/*.whl
 
 # Need to massage the Windows wheels to have the right ABI tag.
 else ifeq ($(OS),win)
-ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27mu-$(PLATFORM).whl
-FINAL_WHEEL = fstd2nc-$(FSTD2NC_PYPI_VERSION)-cp27-cp27m-$(PLATFORM).whl
+ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-cp27-cp27mu-$(PLATFORM).whl
+FINAL_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-cp27-cp27m-$(PLATFORM).whl
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc-$(FSTD2NC_PYPI_VERSION).dist-info
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION).dist-info
 wheel: local_env
 	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
 	rm -Rf $(WHEEL_TMPDIR)
@@ -90,23 +89,19 @@ local_env:
 	$@/bin/pip install "wheel>=0.29.0"
 
 # Set up the build directory (does everything except the actual build).
-$(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch fstd2nc
+$(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
-	echo "__version__='$(FSTD2NC_PYPI_VERSION)'" > $@/setup.py
+	echo "__version__='$(FSTD2NC_DEPS_VERSION)'" > $@/setup.py
 	cat setup.py >> $@/setup.py
 	cp setup.cfg $@
 	git apply $<.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	echo 'import fstd2nc_deps as _deps, os, sys; sys.path.append(os.path.dirname(_deps.__file__)); del _deps, os, sys' > $@/fstd2nc.py
-	(cd fstd2nc && git show $(FSTD2NC_VERSION):fstd2nc.py) >> $@/fstd2nc.py
-	cd fstd2nc && make
-	rsync -av fstd2nc/fstd2nc_locale $@/
 	mv $@/lib $@/fstd2nc_deps
 	ln -s $(PWD)/$@/fstd2nc_deps $@/lib
-	touch $@/fstd2nc_deps/__init__.py
+	echo 'import os, sys; sys.path.append(os.path.dirname(__file__))' > $@/fstd2nc_deps/__init__.py
 
 
 ######################################################################
@@ -239,9 +234,6 @@ $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 
 ######################################################################
 # Rules for getting the required source packages.
-
-fstd2nc:
-	git clone https://github.com/neishm/fstd2nc.git -b $(FSTD2NC_VERSION)
 
 python-rpn:
 	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION)
