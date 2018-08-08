@@ -101,7 +101,7 @@ index 047b2b7..a593898 100644
  	     &float_missing_val,
  	     &int_missing_val,
 diff --git a/fstd98/fstd98.c b/fstd98/fstd98.c
-index ec832d6..34fe1eb 100644
+index ec832d6..ddce759 100644
 --- a/fstd98/fstd98.c
 +++ b/fstd98/fstd98.c
 @@ -34,7 +34,6 @@
@@ -112,6 +112,42 @@ index ec832d6..34fe1eb 100644
  
  #define Max_Ipvals 50
  
+@@ -701,7 +700,7 @@ int c_fstecr(word *field_in, void * work, int npak,
+     if(xdf_short) sizefactor=2 ;
+     if(xdf_double | IEEE_64)sizefactor=8 ;
+     if(is_missing){    /* put appropriate values into field after allocating it */
+-      field= (word *) alloca(ni*nj*nk*sizefactor); /* allocate self deallocating scratch field */
++      field= (word *) malloc(ni*nj*nk*sizefactor); /* allocate self deallocating scratch field */
+       if( 0 == EncodeMissingValue(field,field_in,ni*nj*nk,in_datyp,nbits,xdf_byte,xdf_short,xdf_double) ) {
+         field=field_in ;
+         INFOPRINT fprintf(stderr,"NO missing value, data type %d reset to %d\n",stdf_entry->datyp,datyp);
+@@ -946,7 +945,7 @@ fprintf(stderr,"NEW PACK CODE======================================\n");
+     sprintf(string,"Write(%d)",iun);
+     print_std_parms(stdf_entry,string,prnt_options,0);
+   }
+-/*  free(buffer);        remplaced by alloca */
++  free(buffer);
+   xdf_double = 0;
+   xdf_short = 0;
+   xdf_byte = 0;
+@@ -1813,7 +1812,7 @@ int c_fstluk(word *field, int handle, int *ni, int *nj, int *nk)
+     
+ /*  printf("Debug+ fstluk lng2 = %d\n",lng2); */
+   /* allocate 8 more bytes in case of realingment for 64 bit data */
+-  if ((work_field = alloca(8+(lng2+10)*sizeof(word))) == NULL) {
++  if ((work_field = malloc(8+(lng2+10)*sizeof(word))) == NULL) {
+     sprintf(errmsg,"memory is full, was trying to allocate %ld bytes",
+             lng*sizeof(word));
+     return(error_msg("c_fstluk",ERR_MEM_FULL,ERRFATAL));
+@@ -2049,7 +2048,7 @@ fprintf(stderr,"NEW UNPACK CODE ======================================\n");
+     DecodeMissingValue( field , (*ni)*(*nj)*(*nk) , xdf_datatyp&0x3F,xdf_byte,xdf_short,xdf_double ); /* */
+   }
+   free(stdf_entry);
+-/* free(work_field);        replaced by alloca */
++  free(work_field);
+   xdf_double = 0;
+   xdf_short = 0;
+   xdf_byte = 0;
 diff --git a/fstd98/if_fstd98.c b/fstd98/if_fstd98.c
 index 5ff34a5..1d73290 100644
 --- a/fstd98/if_fstd98.c
