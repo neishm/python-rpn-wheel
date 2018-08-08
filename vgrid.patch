@@ -1,8 +1,8 @@
 diff --git a/src/Makefile b/src/Makefile
-index c1ace57..c1cb2a4 100644
+index 2913dc7..4289fb1 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -1,22 +1,12 @@
+@@ -1,10 +1,4 @@
  
 -ifeq ($(BASE_ARCH),$(EC_ARCH))
 -   $(info ERROR: please setup the compilation environment by typing the folowing:)
@@ -10,20 +10,45 @@ index c1ace57..c1cb2a4 100644
 -   $(error )
 -endif
 -
- default: libdescrip.a
+ include version.dot
  
- dependencies.mk: *.c *.F90 *.h *.hc
+ default: libdescrip.a
+@@ -13,12 +7,8 @@ dependencies.mk: *.c *.F90 *.h *.hc
  	ls *.hc *.c *.F90 | ./s.dependencies.pl > dependencies.mk ;\
  
  include dependencies.mk
 -
 -%.o: %.F90
--	s.f90 -c $(MY_FFLAGS) $<
+-	s.f90 -c $(MY_FFLAGS) $(FFLAGS) $<
 -
 -%.o: %.c
--	s.cc -c $(MY_CFLAGS) $<
+-	s.cc -c $(MY_CFLAGS) $(CFLAGS) $<
 +.SUFFIXES : .c .F90 .o
 +include $(RPN_TEMPLATE_LIBS)/include/makefile_suffix_rules.inc
  
- libdescrip.a: $(OBJECTS) dependencies.mk
+ libdescrip.a: $(OBJECTS) dependencies.mk vgrid_version
  	rm -f libdescrip.a && ar scru libdescrip.a *.o ;\
+diff --git a/src/vgrid_descriptors.F90 b/src/vgrid_descriptors.F90
+index 533ae98..dd7d505 100644
+--- a/src/vgrid_descriptors.F90
++++ b/src/vgrid_descriptors.F90
+@@ -1523,8 +1523,8 @@ contains
+       type(vgrid_descriptor), intent(in) :: self                  !Vertical descriptor instance
+       integer, target, dimension(:), intent(in) :: ip1_list               !Key of prototype field
+       real*8, dimension(:,:,:), pointer :: levels                   !Physical level values
+-      real*8, dimension(:,:), optional, intent(in) :: sfc_field     !Surface field reference for coordinate [none]
+-      real*8, dimension(:,:), optional, intent(in) :: sfc_field_ls  !Surface field large scale reference for coordinate [none]
++      real*8, dimension(:,:), pointer, optional, intent(in) :: sfc_field     !Surface field reference for coordinate [none]
++      real*8, dimension(:,:), pointer, optional, intent(in) :: sfc_field_ls  !Surface field large scale reference for coordinate [none]
+       logical, optional, intent(in) :: in_log                     !Compute levels in ln() [.false.]
+       logical, optional, intent(in) :: dpidpis                    !Compute partial derivative of hydrostatic pressure (pi) with
+       !   respect to surface hydrostatic pressure(pis) [.false.]
+@@ -2236,7 +2236,7 @@ contains
+       if(associated(value))then
+       endif
+       ! To silence the compiler warning
+-      my_value_CP = c_loc(self%cptr)
++      !my_value_CP = c_loc(self%cptr)
+       ! To silence the compiler warning
+       if(key == "")then
+       endif
