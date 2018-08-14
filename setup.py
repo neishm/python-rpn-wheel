@@ -33,7 +33,7 @@ To access the dependencies in your own scripts, simply add the line
     'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
     'Operating System :: POSIX :: Linux',
     'Operating System :: Microsoft :: Windows',
-    'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python',
     'Topic :: Scientific/Engineering :: Atmospheric Science',
   ],
   packages = find_packages(exclude=['lib*']),
