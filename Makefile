@@ -9,7 +9,7 @@ LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
 
 include include/platforms.mk
-all: wheel
+all: wheel-install
 clean:
 	rm -f *.o *.whl
 	rm -Rf *.$(PLATFORM)
@@ -27,62 +27,54 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
 
 .SUFFIXES:
-.PHONY: all wheel extra-libs
+.PHONY: all wheel wheel-install extra-libs
 
 ######################################################################
 # Rule for building the wheel file.
 
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 
-# Linux wheel is straight-forward (we're building on a Linux system!)
-ifeq ($(OS),linux)
-wheel:
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp27-cp27mu/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	# Python 3 below
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp34-cp34m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp35-cp35m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp36-cp36m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
-	cd $(RPNPY_BUILDDIR) && /opt/python/cp37-cp37m/bin/python setup.py bdist_wheel
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-
-# Need to massage the Windows wheels to have the right ABI tag.
-else ifeq ($(OS),win)
-ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-cp27-cp27mu-$(PLATFORM).whl
-FINAL_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-cp27-cp27m-$(PLATFORM).whl
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION).dist-info
-wheel: local_env
-	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
+RETAGGED_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-py2.py3-none-$(PLATFORM).whl
+
+# Linux builds should be done in the manylinux1 container.
+ifeq ($(OS),linux)
+PYTHON=/opt/python/cp27-cp27m/bin/python
+else
+PYTHON=python
+endif
+
+wheel:
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	# Make initial wheel.
+	cd $(RPNPY_BUILDDIR) && $(PYTHON) setup.py bdist_wheel
+	# Fix filename and tags
 	rm -Rf $(WHEEL_TMPDIR)
 	mkdir $(WHEEL_TMPDIR)
-	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(ORIG_WHEEL)
-	# Fix the ABI tag
-	sed -i 's/cp27mu/cp27m/' $(WHEEL_TMPDIST)/WHEEL
+	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(RPNPY_BUILDDIR)/dist/*.whl
+	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
 	# Update SHA-1 sums for the RECORD file.
 	rm -Rf $(WHEEL_TMPDIST)/RECORD
-	./local_env/bin/python -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
+	$(PYTHON) -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
+	rm $(RPNPY_BUILDDIR)/dist/*.whl
+	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(RPNPY_BUILDDIR)/dist/$(RETAGGED_WHEEL) .
+
+wheel-install: wheel
+
+# For linux, use auditwheel to produce a "manylinux1" image.
+ifeq ($(OS),linux)
+wheel-install:
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+
+# For windows, simply use the built wheel as-is.
+else ifeq ($(OS),win)
+wheel-install:
 	mkdir -p $(PWD)/wheelhouse
-	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/wheelhouse/$(FINAL_WHEEL) .
+	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
 
 endif
 
-# Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
-# Tested on wheel v0.29
-local_env:
-	virtualenv $@
-	$@/bin/pip install "wheel>=0.29.0"
 
 # Set up the build directory (does everything except the actual build).
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
