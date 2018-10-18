@@ -3,8 +3,9 @@
 # the CMC network.
 # See README.md for proper usage.
 
-FSTD2NC_DEPS_VERSION = 0.20180808.0
 RPNPY_VERSION = 2.1.b2
+# Wheel files use slightly different version syntax.
+RPNPY_VERSION_WHEEL = 2.1b2
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
 
@@ -35,8 +36,8 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION).dist-info
-RETAGGED_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-py2.py3-none-$(PLATFORM).whl
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
+RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
 
 # Linux builds should be done in the manylinux1 container.
 ifeq ($(OS),linux)
@@ -80,16 +81,12 @@ endif
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
-	echo "__version__='$(FSTD2NC_DEPS_VERSION)'" > $@/setup.py
-	cat setup.py >> $@/setup.py
+	cp setup.py $@
 	cp setup.cfg $@
 	git apply $<.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	mv $@/lib $@/fstd2nc_deps
-	ln -s $(PWD)/$@/fstd2nc_deps $@/lib
-	echo 'import os, sys; sys.path.append(os.path.dirname(__file__))' > $@/fstd2nc_deps/__init__.py
 
 
 ######################################################################

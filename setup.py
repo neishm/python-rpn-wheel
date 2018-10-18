@@ -1,4 +1,9 @@
 from setuptools import setup, Distribution, find_packages
+import sys
+
+# Add './lib' to the search path, so we can access the version info.
+sys.path.append('lib')
+from rpnpy.version import __VERSION__
 
 # Need to force Python to treat this as a binary distribution.
 # We don't have any binary extension modules, but we do have shared
@@ -11,36 +16,19 @@ class BinaryDistribution(Distribution):
     return False
 
 setup (
-  name="fstd2nc_deps",
-  version=__version__,
-  description = 'Dependencies for the fstd2nc package.',
-  long_description = """
-Provides the Python-RPN_ package, along with the librmn_ and libdescrip_ libraries.
-
-To access the dependencies in your own scripts, simply add the line
-  import fstd2nc_deps
-
-.. _Python-RPN: https://github.com/meteokid/python-rpn
-.. _librmn: https://github.com/armnlib/librmn
-.. _libdescrip: https://gitlab.com/ECCC_CMDN/vgrid
-""",
-  author="Mike Neish",
-  license = 'LGPL-3',
-  classifiers = [
-    'Development Status :: 3 - Alpha',
-    'Environment :: Console',
-    'Intended Audience :: Science/Research',
-    'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-    'Operating System :: POSIX :: Linux',
-    'Operating System :: Microsoft :: Windows',
-    'Programming Language :: Python',
-    'Topic :: Scientific/Engineering :: Atmospheric Science',
-  ],
-  packages = find_packages(exclude=['lib*']),
+  name = 'rpnpy',
+  version = __VERSION__,
+  description = 'A Python interface for the RPN libraries at Environment and Climate Change Canada',
+  long_description = open('DESCRIPTION').read(),
+  url = 'https://github.com/meteokid/python-rpn',
+  author = 'Stephane Chamberland',
+  license = 'LGPL-2.1',
+  keywords = 'rpnpy python-rpn vgrid libdescrip librmn rmnlib',
+  packages = find_packages('lib'),
+  package_dir = {'':'lib'},
   install_requires = ['numpy','pytz'],
   package_data = {
-    'fstd2nc_deps.rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
+    'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
   },
   distclass=BinaryDistribution
 )
-
