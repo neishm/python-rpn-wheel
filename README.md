@@ -10,7 +10,7 @@ These instructions assume you are on an `Ubuntu 14.04` system.
 
 First, make sure you have all the dependencies:
 ```
-sudo apt-get install docker.io gcc-mingw-w64 gfortran-mingw-w64 perl python-virtualenv wget dpkg
+sudo apt-get install docker.io gcc-mingw-w64 gfortran-mingw-w64 perl wget dpkg
 ```
 
 To generate wheel files for Windows, run:

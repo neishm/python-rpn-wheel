@@ -10,7 +10,7 @@ sudo docker pull $DOCKER_IMAGE
 
 Steps for building with the 64-bit docker image:
 -----------------------------------------------
-sudo docker run -v $PWD:/io -it $DOCKER_IMAGE bash
+sudo docker run --rm -v $PWD:/io -it $DOCKER_IMAGE bash
 (then, re-create your user/group id)
 yum install -y perl-URI xz.x86_64 zip
 su <username>
@@ -25,7 +25,7 @@ sudo docker pull $DOCKER_IMAGE
 Steps for building with the 32-bit docker image:
 -----------------------------------------------
 PRE_CMD=linux32
-sudo docker run -v $PWD:/io -it $DOCKER_IMAGE $PRE_CMD bash
+sudo docker run --rm -v $PWD:/io -it $DOCKER_IMAGE $PRE_CMD bash
 (then, re-create your user/group id)
 yum install -y perl-URI xz.i386 zip
 su <username>
