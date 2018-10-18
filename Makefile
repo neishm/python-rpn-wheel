@@ -4,8 +4,8 @@
 # See README.md for proper usage.
 
 RPNPY_VERSION = 2.1.b2
-# Wheel files use slightly different version syntax.
-RPNPY_VERSION_WHEEL = 2.1b2
+# Wheel files use slightly different version syntax for linux.
+RPNPY_VERSION_ALTERNATE = 2.1b2
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
 
@@ -36,14 +36,17 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
-RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
+RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
 
 # Linux builds should be done in the manylinux1 container.
 ifeq ($(OS),linux)
 PYTHON=/opt/python/cp27-cp27m/bin/python
+# For some reason, Linux wheel builds mangle the version number?
+# (e.g. 2.1.b2 -> 2.1b2)
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 else
 PYTHON=python
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION).dist-info
 endif
 
 wheel:
