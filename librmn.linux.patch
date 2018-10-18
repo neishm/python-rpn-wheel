@@ -24,6 +24,46 @@ index bb26828..68ea9a7 100644
  
  mzonxst.o:	mzonxst.F 
  npspin.o:       npspin.F 	kases.cdk 	pi.cdk 
+diff --git a/fstd98/fstd98.c b/fstd98/fstd98.c
+index ec832d6..d209d01 100644
+--- a/fstd98/fstd98.c
++++ b/fstd98/fstd98.c
+@@ -589,7 +589,7 @@ int c_fstecr(word *field_in, void * work, int npak,
+   nw = W64TOWD(nw);
+   
+   keys_len = W64TOWD((f->primary_len + f->info_len));
+-  buffer = (buffer_interface_ptr) alloca((10+keys_len+nw+128)*sizeof(word));
++  buffer = (buffer_interface_ptr) malloc((10+keys_len+nw+128)*sizeof(word));
+   if (buffer) 
+     memset(buffer,0,(10+keys_len+nw+128)*sizeof(word));
+   else {
+@@ -946,7 +946,7 @@ fprintf(stderr,"NEW PACK CODE======================================\n");
+     sprintf(string,"Write(%d)",iun);
+     print_std_parms(stdf_entry,string,prnt_options,0);
+   }
+-/*  free(buffer);        remplaced by alloca */
++  free(buffer);
+   xdf_double = 0;
+   xdf_short = 0;
+   xdf_byte = 0;
+@@ -1813,7 +1813,7 @@ int c_fstluk(word *field, int handle, int *ni, int *nj, int *nk)
+     
+ /*  printf("Debug+ fstluk lng2 = %d\n",lng2); */
+   /* allocate 8 more bytes in case of realingment for 64 bit data */
+-  if ((work_field = alloca(8+(lng2+10)*sizeof(word))) == NULL) {
++  if ((work_field = malloc(8+(lng2+10)*sizeof(word))) == NULL) {
+     sprintf(errmsg,"memory is full, was trying to allocate %ld bytes",
+             lng*sizeof(word));
+     return(error_msg("c_fstluk",ERR_MEM_FULL,ERRFATAL));
+@@ -2049,7 +2049,7 @@ fprintf(stderr,"NEW UNPACK CODE ======================================\n");
+     DecodeMissingValue( field , (*ni)*(*nj)*(*nk) , xdf_datatyp&0x3F,xdf_byte,xdf_short,xdf_double ); /* */
+   }
+   free(stdf_entry);
+-/* free(work_field);        replaced by alloca */
++  free(work_field);
+   xdf_double = 0;
+   xdf_short = 0;
+   xdf_byte = 0;
 diff --git a/interp/Makefile b/interp/Makefile
 index 893c1df..f4d854f 100644
 --- a/interp/Makefile

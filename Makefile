@@ -3,29 +3,16 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.0.4
+FSTD2NC_DEPS_VERSION = 0.20180808.0
+RPNPY_VERSION = 2.1.b2
 LIBRMN_VERSION = 016.2
-VGRID_VERSION = 6.1.10
+VGRID_VERSION = 6.2.1
 
-# If no platform specified, build all platforms.
-ifeq ($(PLATFORM),)
-all:
-	make PLATFORM=linux_x86_64
-	make PLATFORM=linux_i686
-	make PLATFORM=win_amd64
-	make PLATFORM=win32
-clean:
-	make clean PLATFORM=linux_x86_64
-	make clean PLATFORM=linux_i686
-	make clean PLATFORM=win_amd64
-	make clean PLATFORM=win32
-else
 include include/platforms.mk
-all: wheel
+all: wheel-install
 clean:
 	rm -f *.o *.whl
 	rm -Rf *.$(PLATFORM)
-endif
 
 # Locations to build static / shared libraries.
 RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
@@ -40,54 +27,69 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 .PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
 
 .SUFFIXES:
-.PHONY: all wheel extra-libs
+.PHONY: all wheel wheel-install extra-libs
 
 ######################################################################
 # Rule for building the wheel file.
 
-wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs local_env
+wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
 
-# Linux wheel is straight-forward (we're building on a Linux system!)
-ifeq ($(OS),linux)
-wheel:
-	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=manylinux1_$(ARCH) --dist-dir=$(PWD)
-
-# Need to massage the Windows wheels to have the right ABI tag.
-else ifeq ($(OS),win)
-ORIG_WHEEL = $(RPNPY_BUILDDIR)/dist/rpnpy-$(RPNPY_VERSION)-cp27-cp27mu-$(PLATFORM).whl
-FINAL_WHEEL = rpnpy-$(RPNPY_VERSION)-cp27-cp27m-$(PLATFORM).whl
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION).dist-info
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/fstd2nc_deps-$(FSTD2NC_DEPS_VERSION).dist-info
+RETAGGED_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-py2.py3-none-$(PLATFORM).whl
+
+# Linux builds should be done in the manylinux1 container.
+ifeq ($(OS),linux)
+PYTHON=/opt/python/cp27-cp27m/bin/python
+else
+PYTHON=python
+endif
+
 wheel:
-	cd $(RPNPY_BUILDDIR) && $(PWD)/local_env/bin/python setup.py bdist_wheel --plat-name=$(PLATFORM)
+	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+	# Make initial wheel.
+	cd $(RPNPY_BUILDDIR) && $(PYTHON) setup.py bdist_wheel
+	# Fix filename and tags
 	rm -Rf $(WHEEL_TMPDIR)
 	mkdir $(WHEEL_TMPDIR)
-	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(ORIG_WHEEL)
-	# Fix the ABI tag
-	sed -i 's/cp27mu/cp27m/' $(WHEEL_TMPDIST)/WHEEL
+	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(RPNPY_BUILDDIR)/dist/*.whl
+	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
 	# Update SHA-1 sums for the RECORD file.
 	rm -Rf $(WHEEL_TMPDIST)/RECORD
-	./local_env/bin/python -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
-	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(FINAL_WHEEL) .
+	$(PYTHON) -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
+	rm $(RPNPY_BUILDDIR)/dist/*.whl
+	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(RPNPY_BUILDDIR)/dist/$(RETAGGED_WHEEL) .
+
+wheel-install: wheel
+
+# For linux, use auditwheel to produce a "manylinux1" image.
+ifeq ($(OS),linux)
+wheel-install:
+	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
+
+# For windows, simply use the built wheel as-is.
+else ifeq ($(OS),win)
+wheel-install:
+	mkdir -p $(PWD)/wheelhouse
+	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
 
 endif
 
-# Need an updated 'wheel' package to build linux_i686 on x86_64 machines.
-# Tested on wheel v0.29
-local_env:
-	virtualenv $@
-	$@/bin/pip install "wheel>=0.29.0"
 
 # Set up the build directory (does everything except the actual build).
 $(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ python-rpn_$(RPNPY_VERSION) | tar -xv
-	cp setup.py $@
+	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
+	echo "__version__='$(FSTD2NC_DEPS_VERSION)'" > $@/setup.py
+	cat setup.py >> $@/setup.py
 	cp setup.cfg $@
 	git apply $<.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+	mv $@/lib $@/fstd2nc_deps
+	ln -s $(PWD)/$@/fstd2nc_deps $@/lib
+	echo 'import os, sys; sys.path.append(os.path.dirname(__file__))' > $@/fstd2nc_deps/__init__.py
 
 
 ######################################################################
@@ -115,11 +117,11 @@ $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 
 ifeq ($(OS),linux)
-extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3 libquadmath.so.0)
+extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3)
 ifeq ($(ARCH),x86_64)
-EXTRA_LIB_SRC = /usr/lib/x86_64-linux-gnu
+EXTRA_LIB_SRC = /usr/lib64
 else ifeq ($(ARCH),i686)
-EXTRA_LIB_SRC = /usr/lib32
+EXTRA_LIB_SRC = /usr/lib
 endif
 $(EXTRA_LIB_DEST)/libgfortran.so.3 : $(EXTRA_LIB_SRC)/libgfortran.so.3
 	cp $< $@
@@ -147,21 +149,30 @@ endif
 # distribution you can probably remove this section, and remove the gfortran-
 # related stuff from the $(LIBDESCRIP_STATIC) rule.
 ifeq ($(OS),linux)
-LOCAL_GFORTRAN_DIR = gcc-4.9.4
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
-LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
+LOCAL_GFORTRAN_VERSION = gcc-4.9.4
+ifeq ($(ARCH),x86_64)
+LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
-$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).tar.xz $(LOCAL_GFORTRAN_EXTRA)
-	tar -xJvf $<
-	tar -xJvf $(LOCAL_GFORTRAN_EXTRA) -C $@
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
+else ifeq ($(ARCH),i686)
+LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)-32bit
+LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
+endif
+LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
+LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
+$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_TAR) $(LOCAL_GFORTRAN_EXTRA)
+	xzdec $< | tar -xv
+	xzdec $(LOCAL_GFORTRAN_EXTRA) | tar -xv -C $@
 	mv $@/bin $@/bin.orig
 	mkdir $@/bin
 	cd $@/bin && ln -s ../bin.orig/gfortran .
 	touch $@
-$(LOCAL_GFORTRAN_DIR).tar.xz:
-	wget http://gfortran.meteodat.ch/download/x86_64/releases/$@
+$(LOCAL_GFORTRAN_TAR):
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$(LOCAL_GFORTRAN_VERSION).tar.xz
+	mv $(LOCAL_GFORTRAN_VERSION).tar.xz $@
 $(LOCAL_GFORTRAN_EXTRA):
-	wget http://gfortran.meteodat.ch/download/x86_64/$@
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/$@
 
 else ifeq ($(OS),win)
 ifeq ($(PLATFORM),win32)
@@ -198,13 +209,13 @@ $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 
 $(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ Release-$(LIBRMN_VERSION) | tar -xv
+	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
 	git apply $<.$(OS).patch --directory=$@
 	touch $@
 
 $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 	rm -Rf $@
-	git -C $< archive --prefix=$@/ $(VGRID_VERSION) | tar -xv
+	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
 	git apply $<.patch --directory=$@
 	touch $@
 

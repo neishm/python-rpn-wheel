@@ -1,8 +1,8 @@
 diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
-index 78573a7..9df36b1 100755
+index 6255e40..097217f 100755
 --- a/lib/rpnpy/librmn/__init__.py
 +++ b/lib/rpnpy/librmn/__init__.py
-@@ -79,19 +79,24 @@ def loadRMNlib(rmn_version=None):
+@@ -75,19 +75,24 @@ def loadRMNlib(rmn_version=None):
      ## import numpy  as np
      ## import numpy.ctypeslib as npct
  
@@ -29,27 +29,27 @@ index 78573a7..9df36b1 100755
              RMN_LIBPATH = checkRMNlibPath(os.path.join(path.strip(), rmn_libfile))
              if RMN_LIBPATH:
                  break
-@@ -99,6 +104,7 @@ def loadRMNlib(rmn_version=None):
+@@ -95,6 +100,7 @@ def loadRMNlib(rmn_version=None):
      if not RMN_LIBPATH:
-         raise IOError, (-1, 'Failed to find librmn.so: ', rmn_libfile)
+         raise IOError(-1, 'Failed to find librmn.so: ', rmn_libfile)
  
 +    RMN_LIBPATH = os.path.abspath(RMN_LIBPATH)
      librmn = None
      try:
          librmn = ct.cdll.LoadLibrary(RMN_LIBPATH)
-@@ -106,6 +112,7 @@ def loadRMNlib(rmn_version=None):
-     except IOError:
+@@ -102,6 +108,7 @@ def loadRMNlib(rmn_version=None):
+     except IOError as e:
          raise IOError('ERROR: cannot load librmn shared version: ' +
-                       RMN_VERSION)
+                       RMN_VERSION, e)
 +    os.chdir(curdir)
      return (RMN_VERSION, RMN_LIBPATH, librmn)
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
-index 207619d..e5d4809 100755
+index 981041f..962f796 100755
 --- a/lib/rpnpy/vgd/__init__.py
 +++ b/lib/rpnpy/vgd/__init__.py
-@@ -81,19 +81,24 @@ def loadVGDlib(vgd_version=None):
+@@ -78,19 +78,24 @@ def loadVGDlib(vgd_version=None):
      ## import numpy  as np
      ## import numpy.ctypeslib as npct
  
@@ -76,7 +76,7 @@ index 207619d..e5d4809 100755
              VGD_LIBPATH = checkVGDlibPath(os.path.join(path.strip(), vgd_libfile))
              if VGD_LIBPATH:
                  break
-@@ -109,6 +114,8 @@ def loadVGDlib(vgd_version=None):
+@@ -106,6 +111,8 @@ def loadVGDlib(vgd_version=None):
      except IOError:
          raise IOError('ERROR: cannot load libdescrip shared version: ' +
                        VGD_VERSION)
