@@ -8,6 +8,7 @@ RPNPY_VERSION = 2.1.b2
 RPNPY_VERSION_ALTERNATE = 2.1b2
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
+LIBBURPC_VERSION = 1.9
 
 include include/platforms.mk
 all: wheel-install
@@ -24,8 +25,11 @@ LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME)
 LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).$(PLATFORM)
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
 LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).$(SHAREDLIB_SUFFIX)
+LIBBURPC_BUILDDIR = libburpc-$(LIBBURPC_VERSION).$(PLATFORM)
+LIBBURPC_STATIC = $(LIBBURPC_BUILDDIR)/src/burp_api.a
+LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIBBURPC_VERSION).$(SHAREDLIB_SUFFIX)
 
-.PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC)
+.PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC) $(LIBBURPC_BUILDDIR) $(LIBBURPC_STATIC)
 
 .SUFFIXES:
 .PHONY: all wheel wheel-install extra-libs
@@ -33,7 +37,7 @@ LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(V
 ######################################################################
 # Rule for building the wheel file.
 
-wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) extra-libs
+wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
@@ -105,6 +109,12 @@ $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
+	rm -f *.o
+	ar -x $<
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
+	rm -f *.o
+
+$(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
 	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
@@ -207,6 +217,11 @@ $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(PWD)/$(LOCAL_GFORTRAN_LIB) make
 	touch $@
 
+$(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
+	cd $</src && \
+	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
+	touch $@
+
 $(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
@@ -216,6 +231,12 @@ $(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
 $(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
+	git apply $<.patch --directory=$@
+	touch $@
+
+$(LIBBURPC_BUILDDIR): libburpc libburpc.patch
+	rm -Rf $@
+	(cd $< && git archive --prefix=$@/ $(LIBBURPC_VERSION)) | tar -xv
 	git apply $<.patch --directory=$@
 	touch $@
 
@@ -231,6 +252,10 @@ librmn:
 
 vgrid:
 	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION)
+
+libburpc:
+	git clone https://gitlab.science.gc.ca/wxobs-libs/libburpc.git -b $(LIBBURPC_VERSION)
+
 
 # This is needed for compiling librmn.  It has some crucial headers like
 # rpnmacros.h.
