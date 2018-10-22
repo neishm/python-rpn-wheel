@@ -4,28 +4,54 @@
 # See README.md for proper usage.
 
 RPNPY_VERSION = 2.1.b2
-# Wheel files use slightly different version syntax for linux.
+# Wheel files use slightly different version syntax.
 RPNPY_VERSION_ALTERNATE = 2.1b2
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
 LIBBURPC_VERSION = 1.9
 
 include include/platforms.mk
-all: wheel-install
+
+# This rule bootstraps the build process to run in a docker container for each
+# supported platform.
+all: docker librmn vgrid libburpc
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-install PLATFORM=win32 && make wheel-install PLATFORM=win_amd64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-install PLATFORM=linux_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-install PLATFORM=linux_i686'
+
+# Rule for generating images from Dockerfiles.
+# This sets up a clean build environment to reduce the likelihood that
+# something goes wrong at build-time or run-time.
+docker: windows/Dockerfile linux64/Dockerfile linux32/Dockerfile
+	sudo docker pull ubuntu:16.04
+	sudo docker build --tag rpnpy-windows-build windows
+	sudo docker pull quay.io/pypa/manylinux1_x86_64
+	sudo docker build --tag rpnpy-linux64-build linux64
+	sudo docker pull quay.io/pypa/manylinux1_i686
+	sudo docker build --tag rpnpy-linux32-build linux32
+
+# Rule for generating a Dockerfile.
+# Fills in userid/groupid information specific to the host system.
+# This information is used to create an equivalent user within the docker
+# container, so that any files copied out of the container have the correct
+# permissions.
+%/Dockerfile: %/Dockerfile.template
+	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
+
 clean:
 	rm -f *.o *.whl
 	rm -Rf *.$(PLATFORM)
 
 # Locations to build static / shared libraries.
-RPNPY_BUILDDIR = python-rpn-$(RPNPY_VERSION).$(PLATFORM)
-LIBRMN_BUILDDIR = librmn-$(LIBRMN_VERSION).$(PLATFORM)
+RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
+LIBRMN_BUILDDIR = build/librmn-$(LIBRMN_VERSION).$(PLATFORM)
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
 LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).$(SHAREDLIB_SUFFIX)
-LIBDESCRIP_BUILDDIR = vgrid-$(VGRID_VERSION).$(PLATFORM)
+LIBDESCRIP_BUILDDIR = build/vgrid-$(VGRID_VERSION).$(PLATFORM)
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
 LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).$(SHAREDLIB_SUFFIX)
-LIBBURPC_BUILDDIR = libburpc-$(LIBBURPC_VERSION).$(PLATFORM)
+LIBBURPC_BUILDDIR = build/libburpc-$(LIBBURPC_VERSION).$(PLATFORM)
 LIBBURPC_STATIC = $(LIBBURPC_BUILDDIR)/src/burp_api.a
 LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIBBURPC_VERSION).$(SHAREDLIB_SUFFIX)
 
@@ -41,16 +67,15 @@ wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
 ifeq ($(OS),linux)
 PYTHON=/opt/python/cp27-cp27m/bin/python
 # For some reason, Linux wheel builds mangle the version number?
 # (e.g. 2.1.b2 -> 2.1b2)
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 else
 PYTHON=python
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION).dist-info
 endif
 
 wheel:
@@ -139,9 +164,16 @@ $(EXTRA_LIB_DEST)/libquadmath.so.0 : $(EXTRA_LIB_SRC)/libquadmath.so.0
 	cp $< $@
 
 else ifeq ($(OS),win)
-EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/4.8
+EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+ifeq ($(ARCH),x86_64)
+extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_seh-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
+else ifeq ($(ARCH),i686)
 extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_sjlj-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
+endif
+
+$(EXTRA_LIB_DEST)/libgcc_s_seh-1.dll : $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll
+	cp $< $@
 $(EXTRA_LIB_DEST)/libgcc_s_sjlj-1.dll : $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll
 	cp $< $@
 $(EXTRA_LIB_DEST)/libgfortran-3.dll : $(EXTRA_LIB_SRC1)/libgfortran-3.dll
@@ -154,10 +186,7 @@ endif
 
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
-# This is needed for compiling the vgrid code in Ubuntu 14.04.
-# It may not be required for Ubuntu 16.04, so if you have a more recent
-# distribution you can probably remove this section, and remove the gfortran-
-# related stuff from the $(LIBDESCRIP_STATIC) rule.
+# This is needed for compiling the vgrid code in the manylinux1 container.
 ifeq ($(OS),linux)
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
@@ -183,22 +212,6 @@ $(LOCAL_GFORTRAN_TAR):
 	mv $(LOCAL_GFORTRAN_VERSION).tar.xz $@
 $(LOCAL_GFORTRAN_EXTRA):
 	wget http://gfortran.meteodat.ch/download/$(ARCH)/$@
-
-else ifeq ($(OS),win)
-ifeq ($(PLATFORM),win32)
-LOCAL_GFORTRAN_DIR = gfortran-mingw-w64-i686_4.9.1-19+14.3_amd64
-else ifeq ($(PLATFORM),win_amd64)
-LOCAL_GFORTRAN_DIR = gfortran-mingw-w64-x86-64_4.9.1-19+14.3_amd64
-endif
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/usr/lib
-LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/usr/bin
-$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_DIR).deb
-	dpkg-deb -x $< $@
-	cd $@/usr/bin && ln -s $(GFORTRAN)-win32 $(GFORTRAN)
-	touch $@
-$(LOCAL_GFORTRAN_DIR).deb:
-	wget http://ftp.us.debian.org/debian/pool/main/g/gcc-mingw-w64/$@
-
 endif
 #
 ######################################################################
@@ -255,15 +268,4 @@ vgrid:
 
 libburpc:
 	git clone https://gitlab.science.gc.ca/wxobs-libs/libburpc.git -b $(LIBBURPC_VERSION)
-
-
-# This is needed for compiling librmn.  It has some crucial headers like
-# rpnmacros.h.
-# Unfortunately, I can't find a public-facing version of this repository, so
-# it has to be grabbed from the CMC network.
-# Alternatively, you can copy the directory from someone else who already has
-# a version of it.
-env-include:
-	git clone joule:/home/dormrb02/GIT-depots/env-include.git
-
 

@@ -30,9 +30,5 @@ else ifeq ($(PLATFORM),win32)
   GFORTRAN = $(ARCH)-w64-mingw32-gfortran
   SHAREDLIB_SUFFIX = dll
   RPN_MACRO_DIR = $(PROJECT_ROOT)/include/Windows32_gfortran
-else ifeq ($(PLATFORM),)
-  $(error $$PLATFORM is not defined.)
-else
-  $(error unrecognized PLATFORM value '$(PLATFORM)')
 endif
 

@@ -6,22 +6,18 @@ The purpose of this tool is to compile and package [Python-RPN](https://github.c
 
 How to use
 ==========
-These instructions assume you are on an `Ubuntu 14.04` system.
-
-First, make sure you have all the dependencies:
+First, you need to install docker.  On an Ubuntu system, you would run:
 ```
-sudo apt-get install docker.io gcc-mingw-w64 gfortran-mingw-w64 perl wget dpkg
+sudo apt-get install docker.io
 ```
 
-To generate wheel files for Windows, run:
+Before you can compile, you'll need to grab a copy of `env-include`:
 ```
-make PLATFORM=win32
-make PLATFORM=win_amd64
+git clone joule:/home/dormrb02/GIT-depots/env-include.git
 ```
 
-To generate a wheel for Linux, you need to run `make` from the `manylinux1` docker container.  See `docker.txt` for details on setting up the container.
-
-The final wheel files are saved in the `wheelhouse/` directory.
+Then, run `make` to generate the Python wheel files for all supported platforms.
+These files are saved in the `wheelhouse/` directory.
 
 You can try installing the wheel files on another system (or in a virtualenv) and test it out.
 The easiest way to install is through `pip`:
@@ -31,9 +27,7 @@ pip install <filename>.whl
 
 Requirements
 ============
-This tool will automatically download a copy of `Python-RPN`, `librmn`, and `vgrid`.
-
-If you're within the CMC network, then the tool will automatically copy the `env-include` package, which is needed for compiling *librmn*.  If you're not within the CMC network, then you'll need to acquire this package yourself.
+This tool will automatically download a copy of `Python-RPN`, `librmn`, `vgrid`, and `libburpc`.
 
 Limitations
 ===========
