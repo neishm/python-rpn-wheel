@@ -39,8 +39,7 @@ docker: windows/Dockerfile linux64/Dockerfile linux32/Dockerfile
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 clean:
-	rm -f *.o *.whl
-	rm -Rf *.$(PLATFORM)
+	rm -Rf build/ windows/Dockerfile linux32/Dockerfile linux64/Dockerfile
 
 # Locations to build static / shared libraries.
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
