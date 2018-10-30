@@ -71,8 +71,6 @@ WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 # Linux builds should be done in the manylinux1 container.
 ifeq ($(OS),linux)
 PYTHON=/opt/python/cp27-cp27m/bin/python
-# For some reason, Linux wheel builds mangle the version number?
-# (e.g. 2.1.b2 -> 2.1b2)
 else
 PYTHON=python
 endif
@@ -151,17 +149,13 @@ $(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 
 ifeq ($(OS),linux)
-extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgfortran.so.3)
-ifeq ($(ARCH),x86_64)
-EXTRA_LIB_SRC = /usr/lib64
-else ifeq ($(ARCH),i686)
-EXTRA_LIB_SRC = /usr/lib
-endif
-$(EXTRA_LIB_DEST)/libgfortran.so.3 : $(EXTRA_LIB_SRC)/libgfortran.so.3
-	cp $< $@
-$(EXTRA_LIB_DEST)/libquadmath.so.0 : $(EXTRA_LIB_SRC)/libquadmath.so.0
-	cp $< $@
 
+# For Linux builds, use the "auditwheel" tool to automatically package any
+# extra dependencies.  No need to explictly copy them here.
+extra-libs : 
+
+# For Windows builds, assume we need to package all the dependencies for the
+# user.
 else ifeq ($(OS),win)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
