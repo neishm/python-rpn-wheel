@@ -65,7 +65,13 @@ LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIB
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
+ifeq ($(OS),linux)
+# Normally "auditwheel" would generate the final wheel name, but for Linux
+# this tool is skipped to avoid pulling in libgfortran.
+RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_$(ARCH).whl
+else
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
+endif
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
@@ -91,19 +97,8 @@ wheel:
 	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(RPNPY_BUILDDIR)/dist/$(RETAGGED_WHEEL) .
 
 wheel-install: wheel
-
-# For linux, use auditwheel to produce a "manylinux1" image.
-ifeq ($(OS),linux)
-wheel-install:
-	auditwheel repair $(RPNPY_BUILDDIR)/dist/*.whl
-
-# For windows, simply use the built wheel as-is.
-else ifeq ($(OS),win)
-wheel-install:
 	mkdir -p $(PWD)/wheelhouse
 	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
-
-endif
 
 
 # Set up the build directory (does everything except the actual build).
@@ -150,8 +145,8 @@ EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 
 ifeq ($(OS),linux)
 
-# For Linux builds, use the "auditwheel" tool to automatically package any
-# extra dependencies.  No need to explictly copy them here.
+# For Linux builds, assume the user already has libgfortran installed.
+# No need to explictly copy it here.
 extra-libs : 
 
 # For Windows builds, assume we need to package all the dependencies for the
