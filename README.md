@@ -2,6 +2,8 @@ Overview
 ========
 The purpose of this tool is to compile and package [Python-RPN](https://github.com/meteokid/python-rpn) into self-contained [wheels](https://pythonwheels.com/) that can be installed on any system.
 These wheels could potentially be uploaded to a repository (such as [pypi.org](https://pypi.org/)) to streamline the package installation for end-users.
+This tool uses the [manylinux](https://github.com/pypa/manylinux) Docker image for building and bundling the required shared libraries (librmn, vgrid, libburpc, etc.).
+Similarly, Windows wheels are built with the [mingw-w64](http://mingw-w64.org/doku.php) compiler inside an Ubuntu Docker container.
 
 **Note:** This build recipe is not part of the `Python-RPN` package, and comes with no support.  Check the [Python-RPN project](https://github.com/meteokid/python-rpn) for official build recipes.
 
