@@ -221,7 +221,7 @@ env-include: code-tools armnlib_2.0u_all
 	cp -R armnlib_2.0u_all/include/* $@/
 	# Add a quick and dirty 32-bit option.
 	mkdir -p $@/Linux_gfortran
-	sed 's/PTR_AS_INT int/PTR_AS_INT long long/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
+	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
 	cp $@/Linux_x86-64_gfortran/Compiler_rules $@/Linux_gfortran/
 
 $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
