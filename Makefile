@@ -208,6 +208,22 @@ endif
 ######################################################################
 # Rules for building the static libraries from source.
 
+# Pre-requisite packages for required headers and compiler rules.
+code-tools:
+	git clone https://github.com/mfvalin/code-tools.git
+armnlib_2.0u_all:
+	wget http://armnlib.uqam.ca//armnlib/repository/armnlib_2.0u_all.ssm
+	tar -xzvf armnlib_2.0u_all.ssm
+	touch $@
+env-include: code-tools armnlib_2.0u_all
+	mkdir -p $@
+	cp -R code-tools/include/* $@/
+	cp -R armnlib_2.0u_all/include/* $@/
+	# Add a quick and dirty 32-bit option.
+	mkdir -p $@/Linux_gfortran
+	sed 's/PTR_AS_INT int/PTR_AS_INT long long/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
+	cp code-tools/include/Linux_x86-64_gfortran/Compiler_rules code-tools/include/Linux_gfortran/
+
 $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
 	cd $< && \
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make

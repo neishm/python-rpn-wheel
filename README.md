@@ -2,18 +2,11 @@ Overview
 ========
 The purpose of this tool is to compile and package [Python-RPN](https://github.com/meteokid/python-rpn) into a self-contained "wheel" file that can be installed on any system.
 
-**Note:** This is a work in progress.  It may not work perfectly out-of-the-box.
-
 How to use
 ==========
 First, you need to install docker.  On an Ubuntu system, you would run:
 ```
 sudo apt-get install docker.io
-```
-
-Before you can compile, you'll need to grab a copy of `env-include`:
-```
-git clone joule:/home/dormrb02/GIT-depots/env-include.git
 ```
 
 Then, run `make` to generate the Python wheel files for all supported platforms.
@@ -27,7 +20,7 @@ pip install <filename>.whl
 
 Requirements
 ============
-This tool will automatically download a copy of `Python-RPN`, `librmn`, `vgrid`, and `libburpc`.
+This tool will automatically download a copy of [Python-RPN](https://github.com/meteokid/python-rpn), [librmn](https://github.com/armnlib/librmn), [vgrid](https://gitlab.com/ECCC_CMDN/vgrid), `libburpc`, [code-tools](https://github.com/mfvalin/code-tools), and `armnlib`.
 
 Limitations
 ===========
