@@ -8,7 +8,7 @@ RPNPY_VERSION = 2.1.b2
 RPNPY_VERSION_ALTERNATE = 2.1b2
 LIBRMN_VERSION = 016.2
 VGRID_VERSION = 6.2.1
-LIBBURPC_VERSION = 1.9
+LIBBURPC_VERSION = 1.9-lgpl
 
 include include/platforms.mk
 
@@ -271,5 +271,5 @@ vgrid:
 	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION)
 
 libburpc:
-	git clone https://gitlab.science.gc.ca/wxobs-libs/libburpc.git -b $(LIBBURPC_VERSION)
+	git clone https://github.com/neishm/libburpc.git -b $(LIBBURPC_VERSION)
 
