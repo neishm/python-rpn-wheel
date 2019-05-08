@@ -25,7 +25,7 @@ pip install <filename>.whl
 
 Requirements
 ============
-This tool will automatically download a copy of [Python-RPN](https://github.com/meteokid/python-rpn), [librmn](https://github.com/armnlib/librmn), [vgrid](https://gitlab.com/ECCC_CMDN/vgrid), `libburpc`, [code-tools](https://github.com/mfvalin/code-tools), and the `armnlib` headers.
+This tool will automatically download a copy of [Python-RPN](https://github.com/meteokid/python-rpn), [librmn](https://github.com/armnlib/librmn), [vgrid](https://gitlab.com/ECCC_CMDN/vgrid), [libburpc](https://github.com/josecmc/libburp), [code-tools](https://github.com/mfvalin/code-tools), and the `armnlib` headers.
 
 Limitations
 ===========
