@@ -17,8 +17,8 @@ include include/platforms.mk
 # supported platform.
 all: docker librmn vgrid libburpc
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-install PLATFORM=win32 && make wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-install PLATFORM=linux_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-install PLATFORM=linux_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-install PLATFORM=manylinux1_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-install PLATFORM=manylinux1_i686'
 
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
@@ -66,13 +66,7 @@ LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIB
 wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
 
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
-ifeq ($(OS),linux)
-# Normally "auditwheel" would generate the final wheel name, but for Linux
-# this tool is skipped to avoid pulling in libgfortran.
-RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_$(ARCH).whl
-else
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
-endif
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
