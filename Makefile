@@ -16,9 +16,14 @@ include include/platforms.mk
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 all: docker librmn vgrid libburpc
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-install PLATFORM=win32 && make wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-install PLATFORM=manylinux1_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+
+# Build a native wheel file (using host OS, assuming it's Linux-based).
+native:
+	make wheel wheel-install PLATFORM=native OS=linux
+
 
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
@@ -63,23 +68,23 @@ LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIB
 ######################################################################
 # Rule for building the wheel file.
 
-wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
-
 WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
-ifeq ($(OS),linux)
+ifneq (,$(findstring manylinux1,$(OS)))
 PYTHON=/opt/python/cp27-cp27m/bin/python
 else
 PYTHON=python
 endif
 
-wheel:
+wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
 	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
 	# Make initial wheel.
 	cd $(RPNPY_BUILDDIR) && $(PYTHON) setup.py bdist_wheel
+
+wheel-retagged: wheel
 	# Fix filename and tags
 	rm -Rf $(WHEEL_TMPDIR)
 	mkdir $(WHEEL_TMPDIR)
@@ -91,7 +96,7 @@ wheel:
 	rm $(RPNPY_BUILDDIR)/dist/*.whl
 	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(RPNPY_BUILDDIR)/dist/$(RETAGGED_WHEEL) .
 
-wheel-install: wheel
+wheel-install:
 	mkdir -p $(PWD)/wheelhouse
 	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
 
@@ -170,7 +175,7 @@ endif
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
 # This is needed for compiling the vgrid code in the manylinux1 container.
-ifeq ($(OS),linux)
+ifneq (,$(findstring manylinux1,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
 LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)

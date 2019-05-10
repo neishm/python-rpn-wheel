@@ -1,4 +1,11 @@
-ifeq ($(PLATFORM),manylinux1_x86_64)
+ifeq ($(PLATFORM),native)
+  ARCH = x86_64
+  OS = linux
+  GCC = gcc
+  GFORTRAN = gfortran
+  SHAREDLIB_SUFFIX = so
+  RPN_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
+else ifeq ($(PLATFORM),manylinux1_x86_64)
   ARCH = x86_64
   OS = linux
   GCC = gcc
