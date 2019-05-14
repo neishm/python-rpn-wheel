@@ -22,7 +22,7 @@ all: docker librmn vgrid libburpc
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
-	make wheel wheel-install PLATFORM=native OS=linux
+	make wheel wheel-install PLATFORM=native
 
 
 # Rule for generating images from Dockerfiles.
@@ -73,7 +73,7 @@ RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
-ifneq (,$(findstring manylinux1,$(OS)))
+ifneq (,$(findstring manylinux1,$(PLATFORM)))
 PYTHON=/opt/python/cp27-cp27m/bin/python
 else
 PYTHON=python
