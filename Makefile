@@ -139,38 +139,37 @@ $(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 
 
 ######################################################################
-# Extra libraries needed at runtime.
-# Copy these into the package so they're always available.
+# Copy libgfortran and related libraries which are needed at runtime.
+
 EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
 
-ifeq ($(OS),linux)
+ifeq ($(PLATFORM),manylinux1_x86_64)
+extra-libs:
+	cp /usr/lib64/libgfortran.so.3 $(EXTRA_LIB_DEST)
 
-# For Linux builds, assume the user already has libgfortran installed.
-# No need to explictly copy it here.
-extra-libs : 
+else ifeq ($(PLATFORM),manylinux1_i686)
+extra-libs:
+	cp /usr/lib/libgfortran.so.3 $(EXTRA_LIB_DEST)
 
-# For Windows builds, assume we need to package all the dependencies for the
-# user.
-else ifeq ($(OS),win)
+else ifeq ($(PLATFORM),win_amd64)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
-ifeq ($(ARCH),x86_64)
-extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_seh-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
-else ifeq ($(ARCH),i686)
-extra-libs : $(addprefix $(EXTRA_LIB_DEST)/,libgcc_s_sjlj-1.dll libgfortran-3.dll libwinpthread-1.dll libquadmath-0.dll)
+extra-libs:
+	cp $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC1)/libgfortran-3.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC1)/libquadmath-0.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC2)/libwinpthread-1.dll $(EXTRA_LIB_DEST)
+
+else ifeq ($(PLATFORM),win32)
+EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
+EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+extra-libs:
+	cp $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC1)/libgfortran-3.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC1)/libquadmath-0.dll $(EXTRA_LIB_DEST)
+	cp $(EXTRA_LIB_SRC2)/libwinpthread-1.dll $(EXTRA_LIB_DEST)
 endif
 
-$(EXTRA_LIB_DEST)/libgcc_s_seh-1.dll : $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll
-	cp $< $@
-$(EXTRA_LIB_DEST)/libgcc_s_sjlj-1.dll : $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll
-	cp $< $@
-$(EXTRA_LIB_DEST)/libgfortran-3.dll : $(EXTRA_LIB_SRC1)/libgfortran-3.dll
-	cp $< $@
-$(EXTRA_LIB_DEST)/libquadmath-0.dll : $(EXTRA_LIB_SRC1)/libquadmath-0.dll
-	cp $< $@
-$(EXTRA_LIB_DEST)/libwinpthread-1.dll : $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
-	cp $< $@
-endif
 
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
