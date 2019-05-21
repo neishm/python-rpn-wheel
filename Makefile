@@ -3,11 +3,11 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.1.b2
+RPNPY_VERSION = 2.1.b3
 # Wheel files use slightly different version syntax.
-RPNPY_VERSION_ALTERNATE = 2.1b2
+RPNPY_VERSION_ALTERNATE = 2.1b3
 LIBRMN_VERSION = 016.2
-VGRID_VERSION = 6.2.1
+VGRID_VERSION = 6.4.b2
 # commit id for libburpc version 1.9 with LGPL license
 LIBBURPC_VERSION = 3a2d4f
 

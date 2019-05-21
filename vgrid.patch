@@ -1,8 +1,8 @@
 diff --git a/src/Makefile b/src/Makefile
-index 2913dc7..4289fb1 100644
+index dbfd826..4289fb1 100644
 --- a/src/Makefile
 +++ b/src/Makefile
-@@ -1,10 +1,4 @@
+@@ -1,14 +1,4 @@
  
 -ifeq ($(BASE_ARCH),$(EC_ARCH))
 -   $(info ERROR: please setup the compilation environment by typing the folowing:)
@@ -10,45 +10,47 @@ index 2913dc7..4289fb1 100644
 -   $(error )
 -endif
 -
+-ifeq ($(USE_EFENCE),1)
+-   LEFENCE=-lefence
+-endif
+-
  include version.dot
  
  default: libdescrip.a
-@@ -13,12 +7,8 @@ dependencies.mk: *.c *.F90 *.h *.hc
+@@ -17,12 +7,8 @@ dependencies.mk: *.c *.F90 *.h *.hc
  	ls *.hc *.c *.F90 | ./s.dependencies.pl > dependencies.mk ;\
  
  include dependencies.mk
 -
 -%.o: %.F90
--	s.f90 -c $(MY_FFLAGS) $(FFLAGS) $<
+-	s.f90 -c -openmp $(MY_FFLAGS) $(FFLAGS) $(LEFENCE) $<
 -
 -%.o: %.c
--	s.cc -c $(MY_CFLAGS) $(CFLAGS) $<
+-	s.cc -c -openmp $(MY_CFLAGS) $(CFLAGS) $(LEFENCE) $<
 +.SUFFIXES : .c .F90 .o
 +include $(RPN_TEMPLATE_LIBS)/include/makefile_suffix_rules.inc
  
  libdescrip.a: $(OBJECTS) dependencies.mk vgrid_version
  	rm -f libdescrip.a && ar scru libdescrip.a *.o ;\
 diff --git a/src/vgrid_descriptors.F90 b/src/vgrid_descriptors.F90
-index 533ae98..dd7d505 100644
+index fe6620b..a446b7b 100644
 --- a/src/vgrid_descriptors.F90
 +++ b/src/vgrid_descriptors.F90
-@@ -1523,8 +1523,8 @@ contains
-       type(vgrid_descriptor), intent(in) :: self                  !Vertical descriptor instance
-       integer, target, dimension(:), intent(in) :: ip1_list               !Key of prototype field
-       real*8, dimension(:,:,:), pointer :: levels                   !Physical level values
--      real*8, dimension(:,:), optional, intent(in) :: sfc_field     !Surface field reference for coordinate [none]
--      real*8, dimension(:,:), optional, intent(in) :: sfc_field_ls  !Surface field large scale reference for coordinate [none]
-+      real*8, dimension(:,:), pointer, optional, intent(in) :: sfc_field     !Surface field reference for coordinate [none]
-+      real*8, dimension(:,:), pointer, optional, intent(in) :: sfc_field_ls  !Surface field large scale reference for coordinate [none]
-       logical, optional, intent(in) :: in_log                     !Compute levels in ln() [.false.]
-       logical, optional, intent(in) :: dpidpis                    !Compute partial derivative of hydrostatic pressure (pi) with
-       !   respect to surface hydrostatic pressure(pis) [.false.]
-@@ -2236,7 +2236,7 @@ contains
-       if(associated(value))then
-       endif
-       ! To silence the compiler warning
--      my_value_CP = c_loc(self%cptr)
-+      !my_value_CP = c_loc(self%cptr)
-       ! To silence the compiler warning
-       if(key == "")then
-       endif
+@@ -2527,7 +2527,7 @@ contains
+  integer function vgd_stda76_pres_from_hgts_list(pres, hgts, nb) result(status)
+    implicit none
+    integer :: nb
+-   real, dimension(nb) :: pres, hgts   
++   real, dimension(nb), target :: pres, hgts   
+    ! Local variables
+    type (c_ptr) :: pres_CP, hgts_CP
+ 
+@@ -2545,7 +2545,7 @@ contains
+  integer function vgd_stda76_hgts_from_pres_list(hgts, pres, nb) result(status)
+    implicit none
+    integer :: nb
+-   real, dimension(nb) :: hgts, pres   
++   real, dimension(nb), target :: hgts, pres   
+    ! Local variables
+    type (c_ptr) :: hgts_CP, pres_CP
+ 
