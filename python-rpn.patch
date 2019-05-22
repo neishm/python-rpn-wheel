@@ -37,6 +37,14 @@ index ffdc484..24735a9 100755
      return (BURPC_VERSION, BURPC_LIBPATH, libburpc)
  
  (BURPC_VERSION, BURPC_LIBPATH, libburpc) = load_burpc_lib()
+diff --git a/lib/rpnpy/examples b/lib/rpnpy/examples
+new file mode 120000
+index 0000000..011fea8
+--- /dev/null
++++ b/lib/rpnpy/examples
+@@ -0,0 +1 @@
++../../share/examples
+\ No newline at end of file
 diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
 index 6255e40..097217f 100755
 --- a/lib/rpnpy/librmn/__init__.py
@@ -84,6 +92,14 @@ index 6255e40..097217f 100755
      return (RMN_VERSION, RMN_LIBPATH, librmn)
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
+diff --git a/lib/rpnpy/tests b/lib/rpnpy/tests
+new file mode 120000
+index 0000000..a30043a
+--- /dev/null
++++ b/lib/rpnpy/tests
+@@ -0,0 +1 @@
++../../share/tests
+\ No newline at end of file
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
 index 981041f..962f796 100755
 --- a/lib/rpnpy/vgd/__init__.py
@@ -124,3 +140,9 @@ index 981041f..962f796 100755
      return (VGD_VERSION, VGD_LIBPATH, libvgd)
  
  (VGD_VERSION, VGD_LIBPATH, libvgd) = loadVGDlib()
+diff --git a/share/examples/__init__.py b/share/examples/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/share/tests/__init__.py b/share/tests/__init__.py
+new file mode 100644
+index 0000000..e69de29
