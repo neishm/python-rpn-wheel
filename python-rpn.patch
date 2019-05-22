@@ -92,6 +92,30 @@ index 6255e40..097217f 100755
      return (RMN_VERSION, RMN_LIBPATH, librmn)
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
+diff --git a/lib/rpnpy/librmn/burp.py b/lib/rpnpy/librmn/burp.py
+index 25f8cbb..6f8331e 100644
+--- a/lib/rpnpy/librmn/burp.py
++++ b/lib/rpnpy/librmn/burp.py
+@@ -1617,7 +1617,7 @@ def _mrbcvt_dict_full_init():
+         mypath = os.path.join(AFSISIO.strip(), 'datafiles/constants',
+                               _rbc.BURP_TABLE_B_FILENAME)
+         if not (AFSISIO and os.path.isfile(mypath)):
+-            AFSISIO2 = os.getenv('rpnpy', '/')
++            AFSISIO2 = os.getenv('rpnpy', os.path.dirname(__file__))
+             mypath = os.path.join(AFSISIO2.strip(), 'share',
+                                   _rbc.BURP_TABLE_B_FILENAME)
+         try:
+diff --git a/lib/rpnpy/librmn/share/__init__.py b/lib/rpnpy/librmn/share/__init__.py
+new file mode 100644
+index 0000000..e69de29
+diff --git a/lib/rpnpy/librmn/share/table_b_bufr_e b/lib/rpnpy/librmn/share/table_b_bufr_e
+new file mode 120000
+index 0000000..5b9ca14
+--- /dev/null
++++ b/lib/rpnpy/librmn/share/table_b_bufr_e
+@@ -0,0 +1 @@
++../../../../share/table_b_bufr_e
+\ No newline at end of file
 diff --git a/lib/rpnpy/tests b/lib/rpnpy/tests
 new file mode 120000
 index 0000000..a30043a
