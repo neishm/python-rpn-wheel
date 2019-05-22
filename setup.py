@@ -25,6 +25,7 @@ setup (
   license = 'LGPL-2.1',
   keywords = 'rpnpy python-rpn vgrid libdescrip librmn rmnlib',
   packages = find_packages('lib'),
+  py_modules = ['Fstdc','rpn_helpers','rpnstd'],
   package_dir = {'':'lib'},
   install_requires = ['numpy','pytz'],
   package_data = {
