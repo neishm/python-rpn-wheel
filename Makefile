@@ -15,7 +15,7 @@ include include/platforms.mk
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker librmn vgrid libburpc
+all: docker cache/librmn cache/vgrid cache/libburpc
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
@@ -28,13 +28,13 @@ native:
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: windows/Dockerfile linux64/Dockerfile linux32/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile
 	sudo docker pull ubuntu:16.04
-	sudo docker build --tag rpnpy-windows-build windows
+	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
 	sudo docker pull quay.io/pypa/manylinux1_x86_64
-	sudo docker build --tag rpnpy-linux64-build linux64
+	sudo docker build --tag rpnpy-linux64-build dockerfiles/linux64
 	sudo docker pull quay.io/pypa/manylinux1_i686
-	sudo docker build --tag rpnpy-linux32-build linux32
+	sudo docker build --tag rpnpy-linux32-build dockerfiles/linux32
 
 # Rule for generating a Dockerfile.
 # Fills in userid/groupid information specific to the host system.
@@ -45,7 +45,9 @@ docker: windows/Dockerfile linux64/Dockerfile linux32/Dockerfile
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 clean:
-	rm -Rf build/ windows/Dockerfile linux32/Dockerfile linux64/Dockerfile
+	rm -Rf build/
+distclean: clean
+	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile env-include
 
 # Locations to build static / shared libraries.
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
@@ -102,12 +104,12 @@ wheel-install:
 
 
 # Set up the build directory (does everything except the actual build).
-$(RPNPY_BUILDDIR): python-rpn setup.py setup.cfg python-rpn.patch
+$(RPNPY_BUILDDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
-	cp setup.py $@
-	cp setup.cfg $@
-	git apply $<.patch --directory=$@
+	cp patches/setup.py $@
+	cp patches/setup.cfg $@
+	git apply patches/python-rpn.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
@@ -177,28 +179,28 @@ endif
 ifneq (,$(findstring manylinux1,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
-LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)
+LOCAL_GFORTRAN_DIR = cache/$(LOCAL_GFORTRAN_VERSION)
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
 else ifeq ($(ARCH),i686)
-LOCAL_GFORTRAN_DIR = $(LOCAL_GFORTRAN_VERSION)-32bit
+LOCAL_GFORTRAN_DIR = cache/$(LOCAL_GFORTRAN_VERSION)-32bit
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
 endif
 LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
 LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
-$(LOCAL_GFORTRAN_DIR): $(LOCAL_GFORTRAN_TAR) $(LOCAL_GFORTRAN_EXTRA)
-	xzdec $< | tar -xv
-	xzdec $(LOCAL_GFORTRAN_EXTRA) | tar -xv -C $@
+$(LOCAL_GFORTRAN_DIR): cache/$(LOCAL_GFORTRAN_TAR) cache/$(LOCAL_GFORTRAN_EXTRA)
+	xzdec $< | tar -xv -C cache/
+	xzdec cache/$(LOCAL_GFORTRAN_EXTRA) | tar -xv -C $@
 	mv $@/bin $@/bin.orig
 	mkdir $@/bin
 	cd $@/bin && ln -s ../bin.orig/gfortran .
 	touch $@
-$(LOCAL_GFORTRAN_TAR):
-	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$(LOCAL_GFORTRAN_VERSION).tar.xz
-	mv $(LOCAL_GFORTRAN_VERSION).tar.xz $@
-$(LOCAL_GFORTRAN_EXTRA):
-	wget http://gfortran.meteodat.ch/download/$(ARCH)/$@
+cache/$(LOCAL_GFORTRAN_TAR):
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$(LOCAL_GFORTRAN_VERSION).tar.xz -P cache/
+	mv cache/$(LOCAL_GFORTRAN_VERSION).tar.xz $@
+cache/$(LOCAL_GFORTRAN_EXTRA):
+	wget http://gfortran.meteodat.ch/download/$(ARCH)/$(LOCAL_GFORTRAN_EXTRA) -P cache/
 endif
 #
 ######################################################################
@@ -208,16 +210,17 @@ endif
 # Rules for building the static libraries from source.
 
 # Pre-requisite packages for required headers and compiler rules.
-code-tools:
-	git clone https://github.com/mfvalin/code-tools.git
-armnlib_2.0u_all:
-	wget http://armnlib.uqam.ca//armnlib/repository/armnlib_2.0u_all.ssm
-	tar -xzvf armnlib_2.0u_all.ssm
+cache/code-tools:
+	mkdir -p cache
+	git clone https://github.com/mfvalin/code-tools.git $@
+cache/armnlib_2.0u_all:
+	wget http://armnlib.uqam.ca//armnlib/repository/armnlib_2.0u_all.ssm -P cache/
+	tar -xzvf $@.ssm -C cache/
 	touch $@
-env-include: code-tools armnlib_2.0u_all
+env-include: cache/code-tools cache/armnlib_2.0u_all
 	mkdir -p $@
-	cp -R code-tools/include/* $@/
-	cp -R armnlib_2.0u_all/include/* $@/
+	cp -R cache/code-tools/include/* $@/
+	cp -R cache/armnlib_2.0u_all/include/* $@/
 	# Add a quick and dirty 32-bit option.
 	mkdir -p $@/Linux_gfortran
 	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
@@ -237,38 +240,42 @@ $(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
-$(LIBRMN_BUILDDIR): librmn librmn.$(OS).patch
+$(LIBRMN_BUILDDIR): cache/librmn patches/librmn.$(OS).patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
-	git apply $<.$(OS).patch --directory=$@
+	git apply patches/librmn.$(OS).patch --directory=$@
 	touch $@
 
-$(LIBDESCRIP_BUILDDIR): vgrid vgrid.patch
+$(LIBDESCRIP_BUILDDIR): cache/vgrid patches/vgrid.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
-	git apply $<.patch --directory=$@
+	git apply patches/vgrid.patch --directory=$@
 	touch $@
 
-$(LIBBURPC_BUILDDIR): libburpc libburpc.patch
+$(LIBBURPC_BUILDDIR): cache/libburpc patches/libburpc.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ $(LIBBURPC_VERSION)) | tar -xv
-	git apply $<.patch --directory=$@
+	git apply patches/libburpc.patch --directory=$@
 	touch $@
 
 
 ######################################################################
 # Rules for getting the required source packages.
 
-python-rpn:
-	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION)
+cache/python-rpn:
+	mkdir -p cache
+	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION) $@
 
-librmn:
-	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION)
+cache/librmn:
+	mkdir -p cache
+	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION) $@
 
-vgrid:
-	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION)
+cache/vgrid:
+	mkdir -p cache
+	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION) $@
 
-libburpc:
+cache/libburpc:
+	mkdir -p cache
 	git clone https://github.com/josecmc/libburp.git $@
 	cd $@ && git checkout $(LIBBURPC_VERSION)
 
