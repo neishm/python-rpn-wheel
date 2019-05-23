@@ -28,13 +28,14 @@ native:
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile dockerfiles/linux64/tests/Dockerfile
 	sudo docker pull ubuntu:16.04
 	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
 	sudo docker pull quay.io/pypa/manylinux1_x86_64
 	sudo docker build --tag rpnpy-linux64-build dockerfiles/linux64
 	sudo docker pull quay.io/pypa/manylinux1_i686
 	sudo docker build --tag rpnpy-linux32-build dockerfiles/linux32
+	sudo docker build --tag rpnpy-linux64-tests dockerfiles/linux64/tests
 
 # Rule for generating a Dockerfile.
 # Fills in userid/groupid information specific to the host system.
@@ -47,7 +48,7 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfile
 clean:
 	rm -Rf build/
 distclean: clean
-	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile env-include
+	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile dockerfiles/*/tests/Dockerfile env-include
 
 # Locations to build static / shared libraries.
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
@@ -278,4 +279,39 @@ cache/libburpc:
 	mkdir -p cache
 	git clone https://github.com/josecmc/libburp.git $@
 	cd $@ && git checkout $(LIBBURPC_VERSION)
+
+
+######################################################################
+# Rules for doing quick tests on the wheels.
+
+test: wheelhouse/rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_x86_64.whl
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-tests bash -c 'cd /io && make _test PLATFORM=native WHEEL=$<'
+
+_test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
+	mkdir -p cache/py
+	virtualenv -p python2 /tmp/myenv
+	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy --cache-dir=cache/py
+	env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf TMPDIR=/tmp /tmp/myenv/bin/python -m unittest discover -s /tmp/myenv/lib/python2.7/site-packages/rpnpy/tests -v
+
+cache/gem-data_4.2.0_all:
+	wget http://collaboration.cmc.ec.gc.ca/science/ssm/gem-data_4.2.0_all.ssm -P cache/
+	tar -xzvf $@.ssm -C cache/
+	touch $@
+
+cache/afsisio_1.0u_all:
+	wget http://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm -P cache/
+	tar -xzvf $@.ssm -C cache/
+	touch $@
+
+REGETA_FILE=cache/cmcgridf/prog/regeta/$(shell date +%Y%m%d)00_048
+
+cache/cmcgridf: $(REGETA_FILE)
+$(REGETA_FILE): cache/python-rpn-lfs
+	mkdir -p cache/cmcgridf/prog/regeta/
+	ln -sf $(PWD)/cache/python-rpn-lfs/cmcgridf/prog/regeta/2019033000_048 $(REGETA_FILE)
+
+cache/python-rpn-lfs:
+	git clone https://github.com/jeixav/python-rpn.git $@ -b feat/travis
+	git -C $@ lfs install --local
+	git -C $@ lfs pull
 
