@@ -46,19 +46,23 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfile
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 clean:
-	rm -Rf build/
+	rm -Rf src/ build/
 distclean: clean
 	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile dockerfiles/*/tests/Dockerfile env-include
 
 # Locations to build static / shared libraries.
+RPNPY_SRCDIR = src/python-rpn-$(RPNPY_VERSION)
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
+LIBRMN_SRCDIR = $(RPNPY_SRCDIR)/src/librmn-$(LIBRMN_VERSION)
 LIBRMN_BUILDDIR = build/librmn-$(LIBRMN_VERSION).$(PLATFORM)
 LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
 LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
 LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).$(SHAREDLIB_SUFFIX)
+LIBDESCRIP_SRCDIR = $(RPNPY_SRCDIR)/src/vgrid-$(VGRID_VERSION)
 LIBDESCRIP_BUILDDIR = build/vgrid-$(VGRID_VERSION).$(PLATFORM)
 LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
 LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).$(SHAREDLIB_SUFFIX)
+LIBBURPC_SRCDIR = $(RPNPY_SRCDIR)/src/libburpc-$(LIBBURPC_VERSION)
 LIBBURPC_BUILDDIR = build/libburpc-$(LIBBURPC_VERSION).$(PLATFORM)
 LIBBURPC_STATIC = $(LIBBURPC_BUILDDIR)/src/burp_api.a
 LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIBBURPC_VERSION).$(SHAREDLIB_SUFFIX)
@@ -104,16 +108,20 @@ wheel-install:
 	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
 
 
-# Set up the build directory (does everything except the actual build).
-$(RPNPY_BUILDDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch
+# Set up the source directory (does everything except the actual build).
+$(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	git apply patches/python-rpn.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
+	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+$(RPNPY_BUILDDIR): $(RPNPY_SRCDIR)
+	mkdir -p build
+	cp -R $< $@
 
 
 ######################################################################
@@ -241,23 +249,32 @@ $(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
-$(LIBRMN_BUILDDIR): cache/librmn patches/librmn.patch
+$(LIBRMN_SRCDIR): cache/librmn patches/librmn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
 	git apply patches/librmn.patch --directory=$@
+	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	touch $@
+$(LIBRMN_BUILDDIR): $(LIBRMN_SRCDIR)
+	cp -R $< $@
 
-$(LIBDESCRIP_BUILDDIR): cache/vgrid patches/vgrid.patch
+$(LIBDESCRIP_SRCDIR): cache/vgrid patches/vgrid.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
 	git apply patches/vgrid.patch --directory=$@
+	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	touch $@
+$(LIBDESCRIP_BUILDDIR): $(LIBDESCRIP_SRCDIR)
+	cp -R $< $@
 
-$(LIBBURPC_BUILDDIR): cache/libburpc patches/libburpc.patch
+$(LIBBURPC_SRCDIR): cache/libburpc patches/libburpc.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ $(LIBBURPC_VERSION)) | tar -xv
 	git apply patches/libburpc.patch --directory=$@
+	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	touch $@
+$(LIBBURPC_BUILDDIR): $(LIBBURPC_SRCDIR)
+	cp -R $< $@
 
 
 ######################################################################
