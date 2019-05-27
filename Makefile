@@ -22,7 +22,7 @@ all: docker cache/librmn cache/vgrid cache/libburpc
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
-	make wheel wheel-install PLATFORM=native
+	make wheel wheel-install
 
 
 # Rule for generating images from Dockerfiles.
@@ -125,7 +125,7 @@ $(RPNPY_BUILDDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/p
 $(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o
+	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o $(EXTRA_LINKS)
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
@@ -241,10 +241,10 @@ $(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
 	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
 	touch $@
 
-$(LIBRMN_BUILDDIR): cache/librmn patches/librmn.$(OS).patch
+$(LIBRMN_BUILDDIR): cache/librmn patches/librmn.patch
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
-	git apply patches/librmn.$(OS).patch --directory=$@
+	git apply patches/librmn.patch --directory=$@
 	touch $@
 
 $(LIBDESCRIP_BUILDDIR): cache/vgrid patches/vgrid.patch
