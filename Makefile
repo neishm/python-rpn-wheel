@@ -109,7 +109,7 @@ wheel-install:
 
 
 # Set up the source directory (does everything except the actual build).
-$(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch
+$(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch env-include
 	rm -Rf $@
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp patches/setup.py $@
@@ -119,6 +119,17 @@ $(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/pyt
 	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+	mkdir -p $@/src
+	cp -PR include $@/src/
+	cp -PR env-include $@/src/
+	# Use simplificed platforms.mk for building from source.
+	rm $@/src/include/platforms.mk
+	echo 'GFORTRAN = gfortran' >> $@/src/include/platforms.mk
+	echo 'GCC = gcc' >> $@/src/include/platforms.mk
+	echo 'RPN_MACRO_DIR = $$(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran' >> $@/src/include/platforms.mk
+	echo 'PUBLIC_INCLUDES = $$(PROJECT_ROOT)/librmn-$(LIBRMN_VERSION)/PUBLIC_INCLUDES' >> $@/src/include/platforms.mk
+	touch $@
+
 $(RPNPY_BUILDDIR): $(RPNPY_SRCDIR)
 	mkdir -p build
 	cp -R $< $@
@@ -227,6 +238,7 @@ cache/armnlib_2.0u_all:
 	tar -xzvf $@.ssm -C cache/
 	touch $@
 env-include: cache/code-tools cache/armnlib_2.0u_all
+	rm -Rf $@
 	mkdir -p $@
 	cp -R cache/code-tools/include/* $@/
 	cp -R cache/armnlib_2.0u_all/include/* $@/
@@ -263,6 +275,7 @@ $(LIBDESCRIP_SRCDIR): cache/vgrid patches/vgrid.patch
 	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
 	git apply patches/vgrid.patch --directory=$@
 	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
+	cd $@/src && env make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD)
 	touch $@
 $(LIBDESCRIP_BUILDDIR): $(LIBDESCRIP_SRCDIR)
 	cp -R $< $@

@@ -1,3 +1,4 @@
+PUBLIC_INCLUDES=$(PROJECT_ROOT)/cache/librmn/PUBLIC_INCLUDES
 ifeq ($(PLATFORM),native)
   ARCH = x86_64
   GCC = gcc
