@@ -122,12 +122,10 @@ $(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/pyt
 	mkdir -p $@/src
 	cp -PR include $@/src/
 	cp -PR env-include $@/src/
-	# Use simplificed platforms.mk for building from source.
-	rm $@/src/include/platforms.mk
-	echo 'GFORTRAN = gfortran' >> $@/src/include/platforms.mk
-	echo 'GCC = gcc' >> $@/src/include/platforms.mk
-	echo 'RPN_MACRO_DIR = $$(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran' >> $@/src/include/platforms.mk
-	echo 'PUBLIC_INCLUDES = $$(PROJECT_ROOT)/librmn-$(LIBRMN_VERSION)/PUBLIC_INCLUDES' >> $@/src/include/platforms.mk
+	# Use simplified make rules for building from source package.
+	# (not doing cross-compiling in this context).
+	cp patches/platforms.mk $@/src/include/
+	cp patches/Makefile $@/src/
 	touch $@
 
 $(RPNPY_BUILDDIR): $(RPNPY_SRCDIR)
