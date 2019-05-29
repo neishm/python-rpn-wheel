@@ -6,12 +6,6 @@
 RPNPY_VERSION = 2.1.b3
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_ALTERNATE = 2.1b3
-LIBRMN_VERSION = 016.2
-VGRID_VERSION = 6.4.b2
-# commit id for libburpc version 1.9 with LGPL license
-LIBBURPC_VERSION = 3a2d4f
-
-include include/platforms.mk
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
@@ -51,23 +45,12 @@ distclean: clean
 	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile dockerfiles/*/tests/Dockerfile env-include
 
 # Locations to build static / shared libraries.
+BUILDDIR = build
 RPNPY_SRCDIR = src/python-rpn-$(RPNPY_VERSION)
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
-LIBRMN_SRCDIR = $(RPNPY_SRCDIR)/src/librmn-$(LIBRMN_VERSION)
-LIBRMN_BUILDDIR = build/librmn-$(LIBRMN_VERSION).$(PLATFORM)
-LIBRMN_STATIC = $(LIBRMN_BUILDDIR)/librmn_$(LIBRMN_VERSION).a
-LIBRMN_SHARED_NAME = rmnshared_$(LIBRMN_VERSION)-rpnpy
-LIBRMN_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/lib$(LIBRMN_SHARED_NAME).$(SHAREDLIB_SUFFIX)
-LIBDESCRIP_SRCDIR = $(RPNPY_SRCDIR)/src/vgrid-$(VGRID_VERSION)
-LIBDESCRIP_BUILDDIR = build/vgrid-$(VGRID_VERSION).$(PLATFORM)
-LIBDESCRIP_STATIC = $(LIBDESCRIP_BUILDDIR)/src/libdescrip.a
-LIBDESCRIP_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libdescripshared_$(VGRID_VERSION).$(SHAREDLIB_SUFFIX)
-LIBBURPC_SRCDIR = $(RPNPY_SRCDIR)/src/libburpc-$(LIBBURPC_VERSION)
-LIBBURPC_BUILDDIR = build/libburpc-$(LIBBURPC_VERSION).$(PLATFORM)
-LIBBURPC_STATIC = $(LIBBURPC_BUILDDIR)/src/burp_api.a
-LIBBURPC_SHARED = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs/libburp_c_shared_$(LIBBURPC_VERSION).$(SHAREDLIB_SUFFIX)
+include include/libs.mk
 
-.PRECIOUS: $(RPNPY_BUILDDIR) $(LIBRMN_BUILDDIR) $(LIBRMN_STATIC) $(LIBDESCRIP_BUILDDIR) $(LIBDESCRIP_STATIC) $(LIBBURPC_BUILDDIR) $(LIBBURPC_STATIC)
+.PRECIOUS: $(RPNPY_BUILDDIR)
 
 .SUFFIXES:
 .PHONY: all wheel wheel-install extra-libs
@@ -131,31 +114,6 @@ $(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/pyt
 $(RPNPY_BUILDDIR): $(RPNPY_SRCDIR)
 	mkdir -p build
 	cp -R $< $@
-
-
-######################################################################
-# Rules for building the required shared libraries.
-
-# Linux shared libraries need to be explicitly told to look in their current path for dependencies.
-%.so: FFLAGS := $(FFLAGS) -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
-
-$(LIBRMN_SHARED): $(LIBRMN_STATIC) $(RPNPY_BUILDDIR)
-	rm -f *.o
-	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o $(EXTRA_LINKS)
-	rm -f *.o
-
-$(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
-	rm -f *.o
-	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
-	rm -f *.o
-
-$(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
-	rm -f *.o
-	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
-	rm -f *.o
 
 
 ######################################################################
@@ -244,20 +202,6 @@ env-include: cache/code-tools cache/armnlib_2.0u_all
 	mkdir -p $@/Linux_gfortran
 	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
 
-$(LIBRMN_STATIC): $(LIBRMN_BUILDDIR) env-include
-	cd $< && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
-	touch $@
-
-$(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
-	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) PATH=$(PWD)/$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(PWD)/$(LOCAL_GFORTRAN_LIB) make
-	touch $@
-
-$(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR) env-include $(LOCAL_GFORTRAN_DIR)
-	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD) PLATFORM=$(PLATFORM) make
-	touch $@
 
 $(LIBRMN_SRCDIR): cache/librmn patches/librmn.patch
 	rm -Rf $@
@@ -265,8 +209,6 @@ $(LIBRMN_SRCDIR): cache/librmn patches/librmn.patch
 	git apply patches/librmn.patch --directory=$@
 	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	touch $@
-$(LIBRMN_BUILDDIR): $(LIBRMN_SRCDIR)
-	cp -R $< $@
 
 $(LIBDESCRIP_SRCDIR): cache/vgrid patches/vgrid.patch
 	rm -Rf $@
@@ -275,8 +217,6 @@ $(LIBDESCRIP_SRCDIR): cache/vgrid patches/vgrid.patch
 	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	cd $@/src && env make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD)
 	touch $@
-$(LIBDESCRIP_BUILDDIR): $(LIBDESCRIP_SRCDIR)
-	cp -R $< $@
 
 $(LIBBURPC_SRCDIR): cache/libburpc patches/libburpc.patch
 	rm -Rf $@
@@ -284,8 +224,6 @@ $(LIBBURPC_SRCDIR): cache/libburpc patches/libburpc.patch
 	git apply patches/libburpc.patch --directory=$@
 	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	touch $@
-$(LIBBURPC_BUILDDIR): $(LIBBURPC_SRCDIR)
-	cp -R $< $@
 
 
 ######################################################################
