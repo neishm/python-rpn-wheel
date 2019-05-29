@@ -13,6 +13,7 @@ all: docker cache/librmn cache/vgrid cache/libburpc
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make sdist'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
@@ -98,6 +99,7 @@ $(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/pyt
 	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
+	cp patches/MANIFEST.in $@
 	git apply patches/python-rpn.patch --directory=$@
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
@@ -246,6 +248,13 @@ cache/libburpc:
 	mkdir -p cache
 	git clone https://github.com/josecmc/libburp.git $@
 	cd $@ && git checkout $(LIBBURPC_VERSION)
+
+
+######################################################################
+# Rules for generated a bundled source distribution.
+
+sdist: $(RPNPY_SRCDIR) $(LIBRMN_SRCDIR) $(LIBDESCRIP_SRCDIR) $(LIBBURPC_SRCDIR) env-include
+	cd $< && $(PYTHON) setup.py sdist --formats=gztar,zip --dist-dir $(PWD)/wheelhouse/
 
 
 ######################################################################
