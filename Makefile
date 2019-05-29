@@ -22,14 +22,15 @@ native:
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile dockerfiles/linux64/tests/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
 	sudo docker pull ubuntu:16.04
 	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
 	sudo docker pull quay.io/pypa/manylinux1_x86_64
 	sudo docker build --tag rpnpy-linux64-build dockerfiles/linux64
 	sudo docker pull quay.io/pypa/manylinux1_i686
 	sudo docker build --tag rpnpy-linux32-build dockerfiles/linux32
-	sudo docker build --tag rpnpy-linux64-tests dockerfiles/linux64/tests
+	sudo docker build --tag rpnpy-test-from-wheel dockerfiles/test_from_wheel
+	sudo docker build --tag rpnpy-test-from-sdist dockerfiles/test_from_sdist
 
 # Rule for generating a Dockerfile.
 # Fills in userid/groupid information specific to the host system.
@@ -42,7 +43,7 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfile
 clean:
 	rm -Rf src/ build/
 distclean: clean
-	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile dockerfiles/*/tests/Dockerfile env-include
+	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile env-include
 
 # Locations to build static / shared libraries.
 BUILDDIR = build
@@ -251,7 +252,7 @@ cache/libburpc:
 # Rules for doing quick tests on the wheels.
 
 test: wheelhouse/rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_x86_64.whl
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-tests bash -c 'cd /io && make _test PLATFORM=native WHEEL=$<'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test PLATFORM=native WHEEL=$<'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
