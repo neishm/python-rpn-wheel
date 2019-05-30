@@ -1,2 +1,3 @@
 recursive-include src *
 prune src/vgrid-*/tests
+recursive-include share *

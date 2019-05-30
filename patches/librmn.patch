@@ -11,6 +11,22 @@ index fb4d0fb..83d50dd 100644
  	./merge_rmnlib_packages $(WORKDIR) $(LIBDIR) $(LIBNAME) ; \
  	fi
  
+diff --git a/PUBLIC_INCLUDES/whiteboard_interface_omp.cdk b/PUBLIC_INCLUDES/whiteboard_interface_omp.cdk
+deleted file mode 120000
+index a88c590..0000000
+--- a/PUBLIC_INCLUDES/whiteboard_interface_omp.cdk
++++ /dev/null
+@@ -1 +0,0 @@
+-../template_utils/whiteboard/whiteboard_interface_omp.cdk
+\ No newline at end of file
+diff --git a/PUBLIC_INCLUDES/whiteboard_interface_st.cdk b/PUBLIC_INCLUDES/whiteboard_interface_st.cdk
+deleted file mode 120000
+index 63f740b..0000000
+--- a/PUBLIC_INCLUDES/whiteboard_interface_st.cdk
++++ /dev/null
+@@ -1 +0,0 @@
+-../template_utils/whiteboard/whiteboard_interface_st.cdk
+\ No newline at end of file
 diff --git a/base/Makefile b/base/Makefile
 index bb26828..68ea9a7 100644
 --- a/base/Makefile

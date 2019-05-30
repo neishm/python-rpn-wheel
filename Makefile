@@ -204,6 +204,8 @@ env-include: cache/code-tools cache/armnlib_2.0u_all
 	# Add a quick and dirty 32-bit option.
 	mkdir -p $@/Linux_gfortran
 	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
+	# Remove broken links - causes problems when building from sdist.
+	find $@ -xtype l -delete
 
 
 $(LIBRMN_SRCDIR): cache/librmn patches/librmn.patch

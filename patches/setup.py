@@ -1,4 +1,5 @@
 from setuptools import setup, Distribution, find_packages
+from distutils.command.build import build
 import sys
 
 # Add './lib' to the search path, so we can access the version info.
@@ -14,6 +15,18 @@ class BinaryDistribution(Distribution):
     return True
   def is_pure(self):
     return False
+
+# Need to invoke the Makefile from the src/ directory to build the shared
+# libraries.
+class BuildSharedLibs(build):
+  def run(self):
+    import os
+    from subprocess import call
+    build.run(self)
+    buildpath = os.path.abspath(os.path.join(self.build_lib,'src'))
+    self.copy_tree('src',buildpath)
+    call(['make','sharedlibs','PWD='+buildpath],cwd=buildpath)
+
 
 setup (
   name = 'rpnpy',
@@ -32,5 +45,6 @@ setup (
     'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
     'rpnpy.librmn.share': ['table_b_bufr_e'],
   },
-  distclass=BinaryDistribution
+  distclass=BinaryDistribution,
+  cmdclass={'build': BuildSharedLibs},
 )
