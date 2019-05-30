@@ -23,9 +23,11 @@ class BuildSharedLibs(build):
     import os
     from subprocess import call
     build.run(self)
-    buildpath = os.path.abspath(os.path.join(self.build_lib,'src'))
-    self.copy_tree('src',buildpath)
-    call(['make','sharedlibs','PWD='+buildpath],cwd=buildpath)
+    builddir = os.path.abspath(self.build_temp)
+    sharedlib_dir = os.path.join(self.build_lib,'rpnpy','_sharedlibs')
+    sharedlib_dir = os.path.abspath(sharedlib_dir)
+    self.copy_tree('src',builddir)
+    call(['make', 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+sharedlib_dir], cwd=builddir)
 
 
 setup (

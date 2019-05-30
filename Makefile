@@ -48,9 +48,23 @@ distclean: clean
 
 # Locations to build static / shared libraries.
 BUILDDIR = build
-RPNPY_SRCDIR = src/python-rpn-$(RPNPY_VERSION)
 RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
 include include/libs.mk
+
+RPNPY_SRCDIR = src/python-rpn-$(RPNPY_VERSION)
+LIBRMN_SRCDIR = $(RPNPY_SRCDIR)/src/librmn-$(LIBRMN_VERSION)
+LIBDESCRIP_SRCDIR = $(RPNPY_SRCDIR)/src/vgrid-$(VGRID_VERSION)
+LIBBURPC_SRCDIR = $(RPNPY_SRCDIR)/src/libburpc-$(LIBBURPC_VERSION)
+
+$(LIBRMN_BUILDDIR): $(LIBRMN_SRCDIR)
+	cp -R $< $@
+
+$(LIBDESCRIP_BUILDDIR): $(LIBDESCRIP_SRCDIR)
+	cp -R $< $@
+
+$(LIBBURPC_BUILDDIR): $(LIBBURPC_SRCDIR)
+	cp -R $< $@
+
 
 .PRECIOUS: $(RPNPY_BUILDDIR)
 
@@ -158,11 +172,11 @@ endif
 ifneq (,$(findstring manylinux1,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
-LOCAL_GFORTRAN_DIR = cache/$(LOCAL_GFORTRAN_VERSION)
+LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
 else ifeq ($(ARCH),i686)
-LOCAL_GFORTRAN_DIR = cache/$(LOCAL_GFORTRAN_VERSION)-32bit
+LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)-32bit
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
 endif
