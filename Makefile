@@ -267,8 +267,9 @@ sdist: $(RPNPY_PACKAGE)
 ######################################################################
 # Rules for doing quick tests on the wheels.
 
-test: wheelhouse/rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_x86_64.whl
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=$<'
+test:
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=wheelhouse/rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_x86_64.whl'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make _test WHEEL=wheelhouse/rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
