@@ -169,10 +169,10 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 # libgfortran and related libraries which are needed at runtime.
 
 ifeq ($(PLATFORM),manylinux1_x86_64)
-EXTRA_LIBS = /usr/lib64/libgfortran.so.3
+#EXTRA_LIBS = /usr/lib64/libgfortran.so.3
 
 else ifeq ($(PLATFORM),manylinux1_i686)
-EXTRA_LIBS = /usr/lib/libgfortran.so.3
+#EXTRA_LIBS = /usr/lib/libgfortran.so.3
 
 else ifeq ($(PLATFORM),win_amd64)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32

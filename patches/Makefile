@@ -19,4 +19,4 @@ include include/libs.mk
 
 sharedlibs: $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED)
 	# Copy extra libraries needed for runtime
-	[ -n "$(EXTRA_LIBS)" ] && cp $(EXTRA_LIBS) $(SHAREDLIB_DIR)
+	[ -z "$(EXTRA_LIBS)" ] || cp $(EXTRA_LIBS) $(SHAREDLIB_DIR)
