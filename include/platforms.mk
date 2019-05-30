@@ -1,11 +1,6 @@
-PUBLIC_INCLUDES=$(PROJECT_ROOT)/cache/librmn/PUBLIC_INCLUDES
-ifeq ($(PLATFORM),native)
-  ARCH = x86_64
-  GCC = gcc
-  GFORTRAN = gfortran
-  SHAREDLIB_SUFFIX = so
-  RPN_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
-else ifeq ($(PLATFORM),manylinux1_x86_64)
+PUBLIC_INCLUDES=$(PROJECT_ROOT)/librmn-016.2/PUBLIC_INCLUDES
+# Check PLATFORM to determine the build environment
+ifeq ($(PLATFORM),manylinux1_x86_64)
   ARCH = x86_64
   GCC = gcc
   CFLAGS := $(CFLAGS) -m64
@@ -35,5 +30,11 @@ else ifeq ($(PLATFORM),win32)
   EXTRA_LINKS := -lws2_32 -lpthread
   SHAREDLIB_SUFFIX = dll
   RPN_MACRO_DIR = $(PROJECT_ROOT)/include/Windows32_gfortran
+# Default - assume building on a Linux machine.
+else
+  GCC = gcc
+  GFORTRAN = gfortran
+  SHAREDLIB_SUFFIX = so
+  RPN_MACRO_DIR = $(PROJECT_ROOT)/env-include/Linux_x86-64_gfortran
 endif
 
