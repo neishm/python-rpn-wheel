@@ -9,7 +9,7 @@ RPNPY_VERSION_ALTERNATE = 2.1b3
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker cache/librmn cache/vgrid cache/libburpc
+all: docker
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
@@ -70,16 +70,17 @@ else
 PYTHON=python
 endif
 
-wheel: $(RPNPY_PACKAGE)
+wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 	# Make initial wheel.
+	rm -Rf $(WHEEL_TMPDIR)
 	mkdir -p $(WHEEL_TMPDIR)
-	rm -Rf $(WHEEL_TMPDIR)/*.whl
 	# Remove old build directories, which may contain incompatible
 	# Fortran modules from other architectures / versions of gfortran.
 	rm -Rf $(RPNPY_PACKAGE)/build
 	# Use setup.py to build the shared libraries and create the initial
 	# wheel file.
-	cd $(RPNPY_PACKAGE) && $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
+	# Pass in any overrides for local gfortran.
+	cd $(RPNPY_PACKAGE) && env PATH=$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(LOCAL_GFORTRAN_LIB) EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
 
 wheel-retagged: wheel
 	# Fix filename and tags
@@ -166,41 +167,37 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 
 
 ######################################################################
-# Copy libgfortran and related libraries which are needed at runtime.
-
-EXTRA_LIB_DEST = $(RPNPY_BUILDDIR)/lib/rpnpy/_sharedlibs
+# libgfortran and related libraries which are needed at runtime.
 
 ifeq ($(PLATFORM),manylinux1_x86_64)
-extra-libs:
-	cp /usr/lib64/libgfortran.so.3 $(EXTRA_LIB_DEST)
+EXTRA_LIBS = /usr/lib64/libgfortran.so.3
 
 else ifeq ($(PLATFORM),manylinux1_i686)
-extra-libs:
-	cp /usr/lib/libgfortran.so.3 $(EXTRA_LIB_DEST)
+EXTRA_LIBS = /usr/lib/libgfortran.so.3
 
 else ifeq ($(PLATFORM),win_amd64)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
-extra-libs:
-	cp $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC1)/libgfortran-3.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC1)/libquadmath-0.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC2)/libwinpthread-1.dll $(EXTRA_LIB_DEST)
+EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll \
+             $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
+             $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
+             $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
 
 else ifeq ($(PLATFORM),win32)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
 EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
-extra-libs:
-	cp $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC1)/libgfortran-3.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC1)/libquadmath-0.dll $(EXTRA_LIB_DEST)
-	cp $(EXTRA_LIB_SRC2)/libwinpthread-1.dll $(EXTRA_LIB_DEST)
+EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll \
+             $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
+             $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
+             $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
 endif
 
 
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
 # This is needed for compiling the vgrid code in the manylinux1 container.
+# Note: the final linking and construction of the shared libraries will be
+# done with the original distribution-provided gfortran.
 ifneq (,$(findstring manylinux1,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
