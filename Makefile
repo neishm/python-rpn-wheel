@@ -99,7 +99,7 @@ wheel-install:
 
 # Construct the bundled source package.
 # This should contain all the source code needed to compile from scratch.
-$(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/platforms.mk patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
+$(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
 	#############################################################
 	### rpnpy modules
 	#############################################################
@@ -121,7 +121,6 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 	cp -PR include $@/src/
 	# Use simplified make rules for building from source package.
 	# (not doing cross-compiling in that context).
-	cp patches/platforms.mk $@/src/include/
 	cp patches/Makefile $@/src/
 	#############################################################
 	### Compiler rules and macros
@@ -269,7 +268,7 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test: wheelhouse/rpnpy-$(RPNPY_VERSION)-py2.py3-none-manylinux1_x86_64.whl
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test PLATFORM=native WHEEL=$<'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=$<'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py

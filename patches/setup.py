@@ -21,13 +21,13 @@ class BinaryDistribution(Distribution):
 class BuildSharedLibs(build):
   def run(self):
     import os
-    from subprocess import call
+    from subprocess import check_call
     build.run(self)
     builddir = os.path.abspath(self.build_temp)
     sharedlib_dir = os.path.join(self.build_lib,'rpnpy','_sharedlibs')
     sharedlib_dir = os.path.abspath(sharedlib_dir)
     self.copy_tree('src',builddir)
-    call(['make', 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+sharedlib_dir], cwd=builddir)
+    check_call(['make', 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+sharedlib_dir], cwd=builddir)
 
 
 setup (
