@@ -10,10 +10,10 @@ RPNPY_VERSION_ALTERNATE = 2.1b3
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 all: docker cache/librmn cache/vgrid cache/libburpc
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make sdist'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
@@ -42,39 +42,24 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfile
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 clean:
-	rm -Rf src/ build/
+	rm -Rf build/
 distclean: clean
-	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile env-include
+	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile
 
-# Locations to build static / shared libraries.
-BUILDDIR = build
-RPNPY_BUILDDIR = build/python-rpn-$(RPNPY_VERSION).$(PLATFORM)
+# Location of the bundled source package
+RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
+.PRECIOUS: $(RPNPY_PACKAGE)
+
+# Get library version info
 include include/libs.mk
 
-RPNPY_SRCDIR = src/python-rpn-$(RPNPY_VERSION)
-LIBRMN_SRCDIR = $(RPNPY_SRCDIR)/src/librmn-$(LIBRMN_VERSION)
-LIBDESCRIP_SRCDIR = $(RPNPY_SRCDIR)/src/vgrid-$(VGRID_VERSION)
-LIBBURPC_SRCDIR = $(RPNPY_SRCDIR)/src/libburpc-$(LIBBURPC_VERSION)
+.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test
 
-$(LIBRMN_BUILDDIR): $(LIBRMN_SRCDIR)
-	cp -R $< $@
-
-$(LIBDESCRIP_BUILDDIR): $(LIBDESCRIP_SRCDIR)
-	cp -R $< $@
-
-$(LIBBURPC_BUILDDIR): $(LIBBURPC_SRCDIR)
-	cp -R $< $@
-
-
-.PRECIOUS: $(RPNPY_BUILDDIR)
-
-.SUFFIXES:
-.PHONY: all wheel wheel-install extra-libs
 
 ######################################################################
 # Rule for building the wheel file.
 
-WHEEL_TMPDIR = $(RPNPY_BUILDDIR)/tmp
+WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
 RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION)-py2.py3-none-$(PLATFORM).whl
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
@@ -85,52 +70,99 @@ else
 PYTHON=python
 endif
 
-wheel: $(RPNPY_BUILDDIR) $(LIBRMN_SHARED) $(LIBDESCRIP_SHARED) $(LIBBURPC_SHARED) extra-libs
-	rm -Rf $(RPNPY_BUILDDIR)/build $(RPNPY_BUILDDIR)/dist
+wheel: $(RPNPY_PACKAGE)
 	# Make initial wheel.
-	cd $(RPNPY_BUILDDIR) && $(PYTHON) setup.py bdist_wheel
+	mkdir -p $(WHEEL_TMPDIR)
+	rm -Rf $(WHEEL_TMPDIR)/*.whl
+	# Remove old build directories, which may contain incompatible
+	# Fortran modules from other architectures / versions of gfortran.
+	rm -Rf $(RPNPY_PACKAGE)/build
+	# Use setup.py to build the shared libraries and create the initial
+	# wheel file.
+	cd $(RPNPY_PACKAGE) && $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
 
 wheel-retagged: wheel
 	# Fix filename and tags
-	rm -Rf $(WHEEL_TMPDIR)
-	mkdir $(WHEEL_TMPDIR)
-	cd $(WHEEL_TMPDIR) && unzip $(PWD)/$(RPNPY_BUILDDIR)/dist/*.whl
+	cd $(WHEEL_TMPDIR) && unzip *.whl
 	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
 	# Update SHA-1 sums for the RECORD file.
 	rm -Rf $(WHEEL_TMPDIST)/RECORD
 	$(PYTHON) -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
-	rm $(RPNPY_BUILDDIR)/dist/*.whl
-	cd $(WHEEL_TMPDIR) && zip -r $(PWD)/$(RPNPY_BUILDDIR)/dist/$(RETAGGED_WHEEL) .
+	rm -f $(WHEEL_TMPDIR)/*.whl
+	cd $(WHEEL_TMPDIR) && zip -r $(RETAGGED_WHEEL) .
 
 wheel-install:
 	mkdir -p $(PWD)/wheelhouse
-	cp $(RPNPY_BUILDDIR)/dist/*.whl $(PWD)/wheelhouse/
+	cp $(WHEEL_TMPDIR)/*.whl $(PWD)/wheelhouse/
 
 
-# Set up the source directory (does everything except the actual build).
-$(RPNPY_SRCDIR): cache/python-rpn patches/setup.py patches/setup.cfg patches/python-rpn.patch env-include
+# Construct the bundled source package.
+# This should contain all the source code needed to compile from scratch.
+$(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/platforms.mk patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
+	#############################################################
+	### rpnpy modules
+	#############################################################
 	rm -Rf $@
-	(cd $< && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
+	(cd cache/python-rpn && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	cp patches/MANIFEST.in $@
+	# Apply some patches to rpnpy so it picks up the bundled shared libs.
 	git apply patches/python-rpn.patch --directory=$@
+	# Version info.
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
+	# Append a notice to modified source files, as per LGPL requirements.
 	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
+	# Create a directory stub for the source code of dependent libraries.
 	mkdir -p $@/src
 	cp -PR include $@/src/
-	cp -PR env-include $@/src/
 	# Use simplified make rules for building from source package.
-	# (not doing cross-compiling in this context).
+	# (not doing cross-compiling in that context).
 	cp patches/platforms.mk $@/src/include/
 	cp patches/Makefile $@/src/
+	#############################################################
+	### Compiler rules and macros
+	#############################################################
+	mkdir -p $@/src/env-include
+	cp -R cache/code-tools/include/* $@/src/env-include/
+	cp -R cache/armnlib_2.0u_all/include/* $@/src/env-include/
+	# Add a quick and dirty 32-bit option.
+	mkdir -p $@/src/env-include/Linux_gfortran
+	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/src/env-include/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/src/env-include/Linux_gfortran/rpn_macros_arch.h
+	# Remove broken links - causes problems when building from sdist.
+	find $@/src/env-include -xtype l -delete
+	#############################################################
+	### librmn source
+	#############################################################
+	(cd cache/librmn && git archive --prefix=$@/src/librmn-$(LIBRMN_VERSION)/ Release-$(LIBRMN_VERSION)) | tar -xv
+	# Apply patches to allow librmn to be compiled straight from gfortran,
+	# without the usual RPN build tools.  Also allows it to cross-compile
+	# to Windows.
+	git apply patches/librmn.patch --directory=$@/src/librmn-$(LIBRMN_VERSION)
+	# Append a notice to modified source files, as per LGPL requirements.
+	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
+	#############################################################
+	### vgrid source
+	#############################################################
+	(cd cache/vgrid && git archive --prefix=$@/src/vgrid-$(VGRID_VERSION)/ $(VGRID_VERSION)) | tar -xv
+	# Apply patches to allow vgrid to be compiled straight from gfortran.
+	git apply patches/vgrid.patch --directory=$@/src/vgrid-$(VGRID_VERSION)
+	# Append a notice to modified source files, as per LGPL requirements.
+	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
+	# Construct dependencies.mk ahead of time, to avoid a build-time
+	# dependence on perl.
+	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD)/$@/src PROJECT_ROOT=$(PWD)/$@/src
+	#############################################################
+	### libburpc source
+	#############################################################
+	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_VERSION)) | tar -xv
+	# Apply patches to allow libburpc to be compiled straight from gfortran.
+	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
+	# Append a notice to modified source files, as per LGPL requirements.
+	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
 	touch $@
-
-$(RPNPY_BUILDDIR): $(RPNPY_SRCDIR)
-	mkdir -p build
-	cp -R $< $@
 
 
 ######################################################################
@@ -200,7 +232,7 @@ endif
 
 
 ######################################################################
-# Rules for building the static libraries from source.
+# Rules for getting the required source packages.
 
 # Pre-requisite packages for required headers and compiler rules.
 cache/code-tools:
@@ -210,43 +242,6 @@ cache/armnlib_2.0u_all:
 	wget http://armnlib.uqam.ca//armnlib/repository/armnlib_2.0u_all.ssm -P cache/
 	tar -xzvf $@.ssm -C cache/
 	touch $@
-env-include: cache/code-tools cache/armnlib_2.0u_all
-	rm -Rf $@
-	mkdir -p $@
-	cp -R cache/code-tools/include/* $@/
-	cp -R cache/armnlib_2.0u_all/include/* $@/
-	# Add a quick and dirty 32-bit option.
-	mkdir -p $@/Linux_gfortran
-	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/Linux_gfortran/rpn_macros_arch.h
-	# Remove broken links - causes problems when building from sdist.
-	find $@ -xtype l -delete
-
-
-$(LIBRMN_SRCDIR): cache/librmn patches/librmn.patch
-	rm -Rf $@
-	(cd $< && git archive --prefix=$@/ Release-$(LIBRMN_VERSION)) | tar -xv
-	git apply patches/librmn.patch --directory=$@
-	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
-	touch $@
-
-$(LIBDESCRIP_SRCDIR): cache/vgrid patches/vgrid.patch
-	rm -Rf $@
-	(cd $< && git archive --prefix=$@/ $(VGRID_VERSION)) | tar -xv
-	git apply patches/vgrid.patch --directory=$@
-	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
-	cd $@/src && env make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD) PROJECT_ROOT=$(PWD)
-	touch $@
-
-$(LIBBURPC_SRCDIR): cache/libburpc patches/libburpc.patch
-	rm -Rf $@
-	(cd $< && git archive --prefix=$@/ $(LIBBURPC_VERSION)) | tar -xv
-	git apply patches/libburpc.patch --directory=$@
-	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
-	touch $@
-
-
-######################################################################
-# Rules for getting the required source packages.
 
 cache/python-rpn:
 	mkdir -p cache
@@ -269,7 +264,7 @@ cache/libburpc:
 ######################################################################
 # Rules for generated a bundled source distribution.
 
-sdist: $(RPNPY_SRCDIR) $(LIBRMN_SRCDIR) $(LIBDESCRIP_SRCDIR) $(LIBBURPC_SRCDIR) env-include
+sdist: $(RPNPY_PACKAGE)
 	cd $< && $(PYTHON) setup.py sdist --formats=gztar,zip --dist-dir $(PWD)/wheelhouse/
 
 
