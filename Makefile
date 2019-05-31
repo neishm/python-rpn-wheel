@@ -261,7 +261,7 @@ cache/libburpc:
 # Rules for generated a bundled source distribution.
 
 sdist: $(RPNPY_PACKAGE)
-	cd $< && $(PYTHON) setup.py sdist --formats=gztar,zip --dist-dir $(PWD)/wheelhouse/
+	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 
 
 ######################################################################
