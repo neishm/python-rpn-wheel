@@ -53,10 +53,6 @@ $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR)
 	env RPN_TEMPLATE_LIBS=$(BUILDDIR) PROJECT_ROOT=$(BUILDDIR) PLATFORM=$(PLATFORM) make
 	touch $@
 
-# Note: LOCAL_GFORTRAN_BIN and LOCAL_GFORTRAN_LIB are optional extra paths for
-# using a custom version of gfortran to do the initial object creation.
-# Useful if the system-installed version is too old to support the latest
-# Fortran syntax.
 $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR)
 	cd $</src && \
 	env RPN_TEMPLATE_LIBS=$(BUILDDIR) PROJECT_ROOT=$(BUILDDIR) PLATFORM=$(PLATFORM) make
