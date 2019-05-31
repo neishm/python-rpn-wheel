@@ -96,7 +96,7 @@ endif
 
 WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
 RETAGGED_WHEEL = eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
 ifneq (,$(findstring manylinux1,$(PLATFORM)))
