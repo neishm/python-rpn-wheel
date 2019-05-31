@@ -31,7 +31,7 @@ class BuildSharedLibs(build):
 
 
 setup (
-  name = 'rpnpy',
+  name = 'eccc-rpnpy',
   version = __VERSION__,
   description = 'A Python interface for the RPN libraries at Environment and Climate Change Canada',
   long_description = open('DESCRIPTION').read(),

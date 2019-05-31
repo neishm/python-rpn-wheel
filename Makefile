@@ -95,8 +95,8 @@ endif
 # Rule for building the wheel file.
 
 WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
-RETAGGED_WHEEL = rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
+RETAGGED_WHEEL = eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
 # Linux builds should be done in the manylinux1 container.
 ifneq (,$(findstring manylinux1,$(PLATFORM)))
@@ -166,8 +166,6 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 	# Add a quick and dirty 32-bit option.
 	mkdir -p $@/src/env-include/Linux_gfortran
 	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/src/env-include/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/src/env-include/Linux_gfortran/rpn_macros_arch.h
-	# Remove broken links - causes problems when building from sdist.
-	find $@/src/env-include -xtype l -delete
 	#############################################################
 	### librmn source
 	#############################################################
@@ -197,6 +195,8 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
 	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
+	# Remove broken links - causes problems when building from sdist.
+	find $@ -xtype l -delete
 	touch $@
 
 
@@ -268,8 +268,8 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=wheelhouse/rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make _test WHEEL=wheelhouse/rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc-rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
