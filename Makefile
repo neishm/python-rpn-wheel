@@ -190,7 +190,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MA
 	#############################################################
 	### libburpc source
 	#############################################################
-	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_VERSION)) | tar -xv
+	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_COMMIT)) | tar -xv
 	# Apply patches to allow libburpc to be compiled straight from gfortran.
 	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
@@ -254,7 +254,7 @@ cache/vgrid:
 cache/libburpc:
 	mkdir -p cache
 	git clone https://github.com/josecmc/libburp.git $@
-	cd $@ && git checkout $(LIBBURPC_VERSION)
+	cd $@ && git checkout $(LIBBURPC_COMMIT)
 
 # Shortcut for fetching latest tags from the repositories.
 # Only needed when updating the library versions.
