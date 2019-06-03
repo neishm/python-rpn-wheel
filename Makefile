@@ -256,6 +256,14 @@ cache/libburpc:
 	git clone https://github.com/josecmc/libburp.git $@
 	cd $@ && git checkout $(LIBBURPC_VERSION)
 
+# Shortcut for fetching latest tags from the repositories.
+# Only needed when updating the library versions.
+fetch:
+	git -C cache/python-rpn fetch --tags
+	git -C cache/librmn fetch --tags
+	git -C cache/vgrid fetch --tags
+	git -C cache/libburpc fetch --tags
+
 
 ######################################################################
 # Rules for generated a bundled source distribution.
