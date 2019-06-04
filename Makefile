@@ -134,12 +134,13 @@ wheel-install:
 
 # Construct the bundled source package.
 # This should contain all the source code needed to compile from scratch.
-$(RPNPY_PACKAGE): cache/python-rpn patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
+$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
 	#############################################################
 	### rpnpy modules
 	#############################################################
 	rm -Rf $@
 	(cd cache/python-rpn && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
+	cp patches/CONTENTS $@
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	cp patches/MANIFEST.in $@

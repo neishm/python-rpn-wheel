@@ -1,4 +1,4 @@
-include LICENSE VERSION DESCRIPTION
+include LICENSE VERSION DESCRIPTION CONTENTS
 recursive-include src *
 prune src/vgrid-*/tests
 recursive-include share *
