@@ -1,6 +1,6 @@
 include $(PROJECT_ROOT)/include/platforms.mk
 
-INC = -I. -I$(PROJECT_ROOT)/env-include -I$(RPN_MACRO_DIR) -I$(PUBLIC_INCLUDES)
+INC = -I. -I$(PROJECT_ROOT)/include -I$(RPN_MACRO_DIR) -I$(PUBLIC_INCLUDES)
 
 COMPILE_C = $(GCC) -fPIC -O$(OPTIMIZ) $(DEFINE) $(CFLAGS) $(INC) $(xSUPP_OPT) $(xC_SUPP_OPT) -c $<
 

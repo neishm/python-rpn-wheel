@@ -134,7 +134,7 @@ wheel-install:
 
 # Construct the bundled source package.
 # This should contain all the source code needed to compile from scratch.
-$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/code-tools cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
+$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
 	#############################################################
 	### rpnpy modules
 	#############################################################
@@ -159,14 +159,18 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# (not doing cross-compiling in that context).
 	cp patches/Makefile $@/src/
 	#############################################################
-	### Compiler rules and macros
+	### RPN headers and macros
 	#############################################################
-	mkdir -p $@/src/env-include
-	cp -R cache/code-tools/include/* $@/src/env-include/
-	cp -R cache/armnlib_2.0u_all/include/* $@/src/env-include/
-	# Add a quick and dirty 32-bit option.
-	mkdir -p $@/src/env-include/Linux_gfortran
-	sed 's/PTR_AS_INT long long/PTR_AS_INT int/' $@/src/env-include/Linux_x86-64_gfortran/rpn_macros_arch.h > $@/src/env-include/Linux_gfortran/rpn_macros_arch.h
+	cp cache/armnlib_2.0u_all/not_shared/AILLEURS/rpnmacros.h $@/src/include/
+	cp cache/armnlib_2.0u_all/not_shared/AILLEURS/ftnmacros.hf $@/src/include/
+	cp cache/armnlib_2.0u_all/include/rpnmacros_global.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/rmnlib.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/ftn2c_helper.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/gossip.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/cgossip.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/md5.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/arc4.h $@/src/include/
+	cp cache/armnlib_2.0u_all/include/fnom.h $@/src/include/
 	#############################################################
 	### librmn source
 	#############################################################
@@ -231,12 +235,9 @@ endif
 ######################################################################
 # Rules for getting the required source packages.
 
-# Pre-requisite packages for required headers and compiler rules.
-cache/code-tools:
-	mkdir -p cache
-	git clone https://github.com/mfvalin/code-tools.git $@
+# Required RPN headers and macros
 cache/armnlib_2.0u_all:
-	wget http://armnlib.uqam.ca//armnlib/repository/armnlib_2.0u_all.ssm -P cache/
+	wget http://collaboration.cmc.ec.gc.ca/science/ssm/armnlib_2.0u_all.ssm -P cache/
 	tar -xzvf $@.ssm -C cache/
 	touch $@
 
