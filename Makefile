@@ -42,9 +42,9 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfile
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 clean:
-	rm -Rf build/
+	rm -Rf build/ wheelhouse/ dockerfiles/*/Dockerfile
 distclean: clean
-	rm -Rf cache/ wheelhouse/ dockerfiles/*/Dockerfile
+	rm -Rf cache/
 
 # Location of the bundled source package
 RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
