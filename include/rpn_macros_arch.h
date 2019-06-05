@@ -1,7 +1,12 @@
 #include <stdint.h>
 #define f77name(a) a##_
 #define f77_name(a) a##_
+#if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
 #define Little_Endian
+#elif (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#else
+#error "endianness not defined"
+#endif
 #if (INTPTR_MAX == INT32_MAX)
 #define PTR_AS_INT int
 #elif (INTPTR_MAX == INT64_MAX)
