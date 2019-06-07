@@ -120,20 +120,7 @@ wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 	# Pass in any overrides for local gfortran.
 	cd $(RPNPY_PACKAGE) && env PATH=$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(LOCAL_GFORTRAN_LIB) EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
 
-# An extra intermediate step for manylinux containers - add in any system
-# library dependencies like gfortran.
-# Can't simply copy libgfortran3, since the version on manylinux has other
-# dependencies for it to function properly.
-ifneq (,$(findstring manylinux2010,$(PLATFORM)))
-AUDITWHEEL = auditwheel
-auditwheel:
-	mkdir $(WHEEL_TMPDIR)/repaired
-	auditwheel repair --plat $(PLATFORM) $(WHEEL_TMPDIR)/*.whl -w $(WHEEL_TMPDIR)/repaired
-	rm $(WHEEL_TMPDIR)/*.whl
-	mv $(WHEEL_TMPDIR)/repaired/*.whl $(WHEEL_TMPDIR)/
-endif
-
-wheel-retagged: wheel $(AUDITWHEEL)
+wheel-retagged: wheel
 	# Fix filename and tags
 	cd $(WHEEL_TMPDIR) && unzip *.whl
 	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
@@ -224,11 +211,9 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 ######################################################################
 # libgfortran and related libraries which are needed at runtime.
 
-ifeq ($(PLATFORM),manylinux1_x86_64)
-#EXTRA_LIBS = /usr/lib64/libgfortran.so.3
-
-else ifeq ($(PLATFORM),manylinux1_i686)
-#EXTRA_LIBS = /usr/lib/libgfortran.so.3
+ifneq (,$(findstring manylinux,$(PLATFORM)))
+EXTRA_LIBS = $(LOCAL_GFORTRAN_LIB)/libgfortran.so.3 \
+             $(LOCAL_GFORTRAN_LIB)/libquadmath.so.0
 
 else ifeq ($(PLATFORM),win_amd64)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
