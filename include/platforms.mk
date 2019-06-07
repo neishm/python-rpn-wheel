@@ -19,6 +19,13 @@ else ifeq ($(PLATFORM),manylinux1_i686)
   GFORTRAN = gfortran
   FFLAGS := $(FFLAGS) -m32
   SHAREDLIB_SUFFIX = so
+else ifeq ($(PLATFORM),manylinux2010_x86_64)
+  ARCH = x86_64
+  GCC = gcc
+  CFLAGS := $(CFLAGS) -m64
+  GFORTRAN = gfortran
+  FFLAGS := $(FFLAGS) -m64
+  SHAREDLIB_SUFFIX = so
 else ifeq ($(PLATFORM),win_amd64)
   ARCH = x86_64
   GCC = $(ARCH)-w64-mingw32-gcc

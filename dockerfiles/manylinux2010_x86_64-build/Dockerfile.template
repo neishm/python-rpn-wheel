@@ -1,0 +1,9 @@
+FROM quay.io/pypa/manylinux2010_x86_64
+
+RUN yum install -y perl-URI xz.x86_64 zip wget
+RUN yum install -y libgfortran.x86_64
+
+RUN groupadd -g $GID $GROUP || true
+RUN useradd -g $GID -u $UID $USER
+
+USER $USER

@@ -12,8 +12,9 @@ RPNPY_VERSION_ALTERNATE = 2.1b3
 all: docker
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-linux32-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
@@ -23,13 +24,15 @@ native:
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: dockerfiles/windows/Dockerfile dockerfiles/linux64/Dockerfile dockerfiles/linux32/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux1_x86_64-build/Dockerfile dockerfiles/manylinux1_i686-build/Dockerfile dockerfiles/manylinux2010_x86_64-build/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
 	sudo docker pull ubuntu:16.04
 	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
 	sudo docker pull quay.io/pypa/manylinux1_x86_64
-	sudo docker build --tag rpnpy-linux64-build dockerfiles/linux64
+	sudo docker build --tag rpnpy-manylinux1_x86_64-build dockerfiles/manylinux1_x86_64-build
 	sudo docker pull quay.io/pypa/manylinux1_i686
-	sudo docker build --tag rpnpy-linux32-build dockerfiles/linux32
+	sudo docker build --tag rpnpy-manylinux1_i686-build dockerfiles/manylinux1_i686-build
+	sudo docker pull quay.io/pypa/manylinux2010_x86_64
+	sudo docker build --tag rpnpy-manylinux2010_x86_64-build dockerfiles/manylinux2010_x86_64-build
 	sudo docker build --tag rpnpy-test-from-wheel dockerfiles/test_from_wheel
 	sudo docker build --tag rpnpy-test-from-sdist dockerfiles/test_from_sdist
 
@@ -58,10 +61,10 @@ include include/libs.mk
 
 ######################################################################
 # The stuff below is for getting an updated version of gfortran.
-# This is needed for compiling the vgrid code in the manylinux1 container.
+# This is needed for compiling the vgrid code in the manylinux containers.
 # Note: the final linking and construction of the shared libraries will be
 # done with the original distribution-provided gfortran.
-ifneq (,$(findstring manylinux1,$(PLATFORM)))
+ifneq (,$(findstring manylinux,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(ARCH),x86_64)
 LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
@@ -98,8 +101,8 @@ WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
 RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
 WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
 
-# Linux builds should be done in the manylinux1 container.
-ifneq (,$(findstring manylinux1,$(PLATFORM)))
+# Linux builds should be done in the manylinux containers.
+ifneq (,$(findstring manylinux,$(PLATFORM)))
 PYTHON=/opt/python/cp27-cp27m/bin/python
 else
 PYTHON=python
@@ -117,7 +120,20 @@ wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 	# Pass in any overrides for local gfortran.
 	cd $(RPNPY_PACKAGE) && env PATH=$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(LOCAL_GFORTRAN_LIB) EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
 
-wheel-retagged: wheel
+# An extra intermediate step for manylinux containers - add in any system
+# library dependencies like gfortran.
+# Can't simply copy libgfortran3, since the version on manylinux has other
+# dependencies for it to function properly.
+ifneq (,$(findstring manylinux2010,$(PLATFORM)))
+AUDITWHEEL = auditwheel
+auditwheel:
+	mkdir $(WHEEL_TMPDIR)/repaired
+	auditwheel repair --plat $(PLATFORM) $(WHEEL_TMPDIR)/*.whl -w $(WHEEL_TMPDIR)/repaired
+	rm $(WHEEL_TMPDIR)/*.whl
+	mv $(WHEEL_TMPDIR)/repaired/*.whl $(WHEEL_TMPDIR)/
+endif
+
+wheel-retagged: wheel $(AUDITWHEEL)
 	# Fix filename and tags
 	cd $(WHEEL_TMPDIR) && unzip *.whl
 	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
