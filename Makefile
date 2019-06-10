@@ -122,7 +122,7 @@ wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 
 wheel-retagged: wheel
 	# Fix filename and tags
-	cd $(WHEEL_TMPDIR) && unzip *.whl
+	cd $(WHEEL_TMPDIR) && unzip *.whl && rm *.whl
 	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
 	# Update SHA-1 sums for the RECORD file.
 	rm -Rf $(WHEEL_TMPDIST)/RECORD
