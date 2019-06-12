@@ -4,7 +4,10 @@ LIBBURPC_VERSION = 1.9
 # commit id for libburpc version 1.9 with LGPL license
 LIBBURPC_COMMIT = 3a2d4f
 
-include include/platforms.mk
+include include/makefile_suffix_rules.inc
+
+# Set default shared library extension.
+SHAREDLIB_SUFFIX ?= so
 
 # Locations to build static / shared libraries.
 LIBRMN_BUILDDIR = $(BUILDDIR)/librmn-$(LIBRMN_VERSION)
