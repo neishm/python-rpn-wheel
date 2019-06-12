@@ -64,17 +64,21 @@ include include/libs.mk
 # This is needed for compiling the vgrid code in the manylinux containers.
 # Note: the final linking and construction of the shared libraries will be
 # done with the original distribution-provided gfortran.
+
 ifneq (,$(findstring manylinux,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
-ifeq ($(ARCH),x86_64)
-LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
-LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
-else ifeq ($(ARCH),i686)
+ifeq ($(PLATFORM),manylinux1_i686)
+ARCH = i686
 LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)-32bit
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
+else
+ARCH = x86_64
+LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
+LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
 endif
+
 LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
 LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
 $(LOCAL_GFORTRAN_DIR): cache/$(LOCAL_GFORTRAN_TAR) cache/$(LOCAL_GFORTRAN_EXTRA)
@@ -216,16 +220,16 @@ EXTRA_LIBS = $(LOCAL_GFORTRAN_LIB)/libgfortran.so.3 \
              $(LOCAL_GFORTRAN_LIB)/libquadmath.so.0
 
 else ifeq ($(PLATFORM),win_amd64)
-EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
-EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+EXTRA_LIB_SRC1 = /usr/lib/gcc/x86_64-w64-mingw32/5.3-win32
+EXTRA_LIB_SRC2 = /usr/x86_64-w64-mingw32/lib
 EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll \
              $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
              $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
              $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
 
 else ifeq ($(PLATFORM),win32)
-EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
-EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+EXTRA_LIB_SRC1 = /usr/lib/gcc/i686-w64-mingw32/5.3-win32
+EXTRA_LIB_SRC2 = /usr/i686-w64-mingw32/lib
 EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll \
              $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
              $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
