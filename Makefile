@@ -10,15 +10,15 @@ RPNPY_VERSION_ALTERNATE = 2.1b3
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 all: docker
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make sdist'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
-	make wheel wheel-install
+	$(MAKE) wheel wheel-install
 
 
 # Rule for generating images from Dockerfiles.
@@ -52,6 +52,29 @@ distclean: clean
 # Location of the bundled source package
 RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
 .PRECIOUS: $(RPNPY_PACKAGE)
+
+# Check PLATFORM to determine the build environment
+ifeq ($(PLATFORM),manylinux1_x86_64)
+  export CFLAGS = -m64
+  export FFLAGS = -m64
+else ifeq ($(PLATFORM),manylinux1_i686)
+  export CFLAGS = -m32
+  export FFLAGS = -m32
+else ifeq ($(PLATFORM),manylinux2010_x86_64)
+  export CFLAGS = -m64
+  export FFLAGS = -m64
+else ifeq ($(PLATFORM),win_amd64)
+  export CC = x86_64-w64-mingw32-gcc
+  export FC = x86_64-w64-mingw32-gfortran
+  export FFLAGS = -lws2_32 -lpthread
+  export SHAREDLIB_SUFFIX = dll
+else ifeq ($(PLATFORM),win32)
+  export CC = i686-w64-mingw32-gcc
+  export FC = i686-w64-mingw32-gfortran
+  export FFLAGS = -lws2_32 -lpthread
+  export SHAREDLIB_SUFFIX = dll
+endif
+
 
 # Get library version info
 include include/libs.mk
@@ -283,8 +306,8 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
