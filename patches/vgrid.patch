@@ -1,5 +1,5 @@
 diff --git a/src/Makefile b/src/Makefile
-index dbfd826..4289fb1 100644
+index dbfd826..1ee8326 100644
 --- a/src/Makefile
 +++ b/src/Makefile
 @@ -1,14 +1,4 @@
@@ -28,7 +28,7 @@ index dbfd826..4289fb1 100644
 -%.o: %.c
 -	s.cc -c -openmp $(MY_CFLAGS) $(CFLAGS) $(LEFENCE) $<
 +.SUFFIXES : .c .F90 .o
-+include $(RPN_TEMPLATE_LIBS)/include/makefile_suffix_rules.inc
++include $(PROJECT_ROOT)/include/makefile_suffix_rules.inc
  
  libdescrip.a: $(OBJECTS) dependencies.mk vgrid_version
  	rm -f libdescrip.a && ar scru libdescrip.a *.o ;\

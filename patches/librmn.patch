@@ -1,8 +1,17 @@
 diff --git a/Makefile b/Makefile
-index fb4d0fb..83d50dd 100644
+index fb4d0fb..7fdcf81 100644
 --- a/Makefile
 +++ b/Makefile
-@@ -24,7 +24,7 @@ genlib:
+@@ -2,6 +2,8 @@ SHELL = /bin/bash
+ 
+ include rmnlib_version.inc
+ 
++export RPN_TEMPLATE_LIBS = $(PROJECT_ROOT)
++
+ LIBNAME = librmn_$(RMNLIB_VERSION)
+ 
+ WORKDIR = ./WorkDir
+@@ -24,7 +26,7 @@ genlib:
  	./merge_rmnlib_packages $(WORKDIR) $(LIBDIR) $(LIBNAME)_d ; \
  	else \
  	./make_locallib_packages ; \

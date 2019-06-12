@@ -221,7 +221,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
 	# Construct dependencies.mk ahead of time, to avoid a build-time
 	# dependence on perl.
-	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD)/$@/src PROJECT_ROOT=$(PWD)/$@/src
+	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src
 	#############################################################
 	### libburpc source
 	#############################################################
