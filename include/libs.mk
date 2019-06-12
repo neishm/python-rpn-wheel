@@ -31,19 +31,19 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
 $(LIBRMN_SHARED): $(LIBRMN_STATIC)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o $(EXTRA_LINKS)
+	$(FC) -shared $(FFLAGS) -o $@ *.o $(EXTRA_LINKS)
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
+	$(FC) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
 	rm -f *.o
 
 $(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
+	$(FC) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
 	rm -f *.o
 
 ######################################################################

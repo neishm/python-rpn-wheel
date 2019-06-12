@@ -7,33 +7,33 @@ RPN_MACRO_DIR = $(PROJECT_ROOT)/include
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux1_x86_64)
   CFLAGS := $(CFLAGS) -m64
-  GFORTRAN = gfortran
+  FC = gfortran
   FFLAGS := $(FFLAGS) -m64
   SHAREDLIB_SUFFIX = so
 else ifeq ($(PLATFORM),manylinux1_i686)
   CFLAGS := $(CFLAGS) -m32
-  GFORTRAN = gfortran
+  FC = gfortran
   FFLAGS := $(FFLAGS) -m32
   SHAREDLIB_SUFFIX = so
 else ifeq ($(PLATFORM),manylinux2010_x86_64)
   CFLAGS := $(CFLAGS) -m64
-  GFORTRAN = gfortran
+  FC = gfortran
   FFLAGS := $(FFLAGS) -m64
   SHAREDLIB_SUFFIX = so
 else ifeq ($(PLATFORM),win_amd64)
   CC = x86_64-w64-mingw32-gcc
-  GFORTRAN = x86_64-w64-mingw32-gfortran
+  FC = x86_64-w64-mingw32-gfortran
   EXTRA_LINKS := -lws2_32 -lpthread
   SHAREDLIB_SUFFIX = dll
 else ifeq ($(PLATFORM),win32)
   CC = i686-w64-mingw32-gcc
-  GFORTRAN = i686-w64-mingw32-gfortran
+  FC = i686-w64-mingw32-gfortran
   EXTRA_LINKS := -lws2_32 -lpthread
   SHAREDLIB_SUFFIX = dll
 # Default - assume building on a Linux machine.
 else
-  GFORTRAN = gfortran
   SHAREDLIB_SUFFIX = so
 endif
 
 CFLAGS := $(CFLAGS) -fPIC
+FFLAGS := $(FFLAGS) -fPIC

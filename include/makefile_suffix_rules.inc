@@ -2,12 +2,6 @@ include $(PROJECT_ROOT)/include/platforms.mk
 
 INC = -I. -I$(PROJECT_ROOT)/include -I$(RPN_MACRO_DIR) -I$(PUBLIC_INCLUDES)
 
-COMPILE_F77 = $(GFORTRAN) -fPIC -fcray-pointer -O$(OPTIMIZ) $(FFLAGS) $(INC) $(xSUPP_OPT) $(xF_SUPP_OPT) -c $<
-
-COMPILE_F90 = $(GFORTRAN) -fPIC -fcray-pointer -ffree-line-length-none -O$(OPTIMIZ) $(FFLAGS) $(INC) $(xSUPP_OPT) $(xF90_SUPP_OPT) -c $<
-
-PREPROCESSOR = cpp $(DEFINE) $(INC) $< $@
-
 .c.o:
 	$(CC) -O$(OPTIMIZ) $(CFLAGS) $(INC) -c $<
 
@@ -16,22 +10,22 @@ PREPROCESSOR = cpp $(DEFINE) $(INC) $< $@
 	rm -f $*.o
 
 .f.o:
-	$(COMPILE_F77)
+	$(FC) -fcray-pointer -O$(OPTIMIZ) $(FFLAGS) $(INC) -c $<
 
 .F.o:
-	$(COMPILE_F77)
+	$(FC) -fcray-pointer -O$(OPTIMIZ) $(FFLAGS) $(INC) -c $<
 
 
 .ftn.f: 
-	$(PREPROCESSOR)
+	cpp $(INC) $< $@
 
 .f90.o:
-	$(COMPILE_F90)
+	$(FC) -fcray-pointer -ffree-line-length-none -O$(OPTIMIZ) $(FFLAGS) $(INC) -c $<
 
 .ftn90.f90:
-	$(PREPROCESSOR)
+	cpp $(INC) $< $@
  
 .F90.o:
-	$(COMPILE_F90)
+	$(FC) -fcray-pointer -ffree-line-length-none -O$(OPTIMIZ) $(FFLAGS) $(INC) -c $<
 
 
