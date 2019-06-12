@@ -2,8 +2,6 @@ include $(PROJECT_ROOT)/include/platforms.mk
 
 INC = -I. -I$(PROJECT_ROOT)/include -I$(RPN_MACRO_DIR) -I$(PUBLIC_INCLUDES)
 
-COMPILE_C = $(GCC) -fPIC -O$(OPTIMIZ) $(DEFINE) $(CFLAGS) $(INC) $(xSUPP_OPT) $(xC_SUPP_OPT) -c $<
-
 COMPILE_F77 = $(GFORTRAN) -fPIC -fcray-pointer -O$(OPTIMIZ) $(FFLAGS) $(INC) $(xSUPP_OPT) $(xF_SUPP_OPT) -c $<
 
 COMPILE_F90 = $(GFORTRAN) -fPIC -fcray-pointer -ffree-line-length-none -O$(OPTIMIZ) $(FFLAGS) $(INC) $(xSUPP_OPT) $(xF90_SUPP_OPT) -c $<
@@ -11,7 +9,7 @@ COMPILE_F90 = $(GFORTRAN) -fPIC -fcray-pointer -ffree-line-length-none -O$(OPTIM
 PREPROCESSOR = cpp $(DEFINE) $(INC) $< $@
 
 .c.o:
-	$(COMPILE_C)
+	$(CC) -O$(OPTIMIZ) $(CFLAGS) $(INC) -c $<
 
 .o.a:
 	ar rv $@ $<
