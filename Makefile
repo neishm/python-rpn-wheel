@@ -180,7 +180,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Version info.
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
+	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/$$file; echo "# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
 	# Create a directory stub for the source code of dependent libraries.
@@ -211,7 +211,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# to Windows.
 	git apply patches/librmn.patch --directory=$@/src/librmn-$(LIBRMN_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
 	#############################################################
 	### vgrid source
 	#############################################################
@@ -219,7 +219,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Apply patches to allow vgrid to be compiled straight from gfortran.
 	git apply patches/vgrid.patch --directory=$@/src/vgrid-$(VGRID_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/vgrid-$(VGRID_VERSION)/$$file; echo "! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
 	# Construct dependencies.mk ahead of time, to avoid a build-time
 	# dependence on perl.
 	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src
@@ -230,7 +230,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Apply patches to allow libburpc to be compiled straight from gfortran.
 	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
 	# Remove broken links - causes problems when building from sdist.
 	find $@ -xtype l -delete
 	touch $@
