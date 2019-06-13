@@ -23,12 +23,24 @@ class BuildSharedLibs(build):
   def run(self):
     import os
     from subprocess import check_call
+    import platform
+
     build.run(self)
     builddir = os.path.abspath(self.build_temp)
     sharedlib_dir = os.path.join(self.build_lib,'rpnpy','_sharedlibs')
     sharedlib_dir = os.path.abspath(sharedlib_dir)
     self.copy_tree('src',builddir)
-    check_call(['make', 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+sharedlib_dir], cwd=builddir)
+
+    if 'SHAREDLIB_SUFFIX' in os.environ:
+      sharedlib_suffix = os.environ['SHAREDLIB_SUFFIX']
+    else:
+      sharedlib_suffix = {
+      'Linux': 'so',
+      'Windows': 'dll',
+      'Darwin': 'dylib',
+    }[platform.system()]
+
+    check_call(['make', 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+sharedlib_dir, 'SHAREDLIB_SUFFIX='+sharedlib_suffix], cwd=builddir)
 
 
 setup (
