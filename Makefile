@@ -53,13 +53,19 @@ RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
 
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux1_x86_64)
+  export CC = gcc
   export CFLAGS = -m64
+  export FC = gfortran
   export FFLAGS = -m64
 else ifeq ($(PLATFORM),manylinux1_i686)
+  export CC = gcc
   export CFLAGS = -m32
+  export FC = gfortran
   export FFLAGS = -m32
 else ifeq ($(PLATFORM),manylinux2010_x86_64)
+  export CC = gcc
   export CFLAGS = -m64
+  export FC = gfortran
   export FFLAGS = -m64
 else ifeq ($(PLATFORM),win_amd64)
   export CC = x86_64-w64-mingw32-gcc

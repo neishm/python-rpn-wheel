@@ -1,5 +1,5 @@
 include include/versions.mk
-include include/makefile_suffix_rules.inc
+include include/compiler.mk
 
 # Set default shared library extension.
 SHAREDLIB_SUFFIX ?= so
