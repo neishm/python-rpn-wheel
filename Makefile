@@ -3,22 +3,20 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.1.b3
-# Wheel files use slightly different version syntax.
-RPNPY_VERSION_ALTERNATE = 2.1b3
+include include/versions.mk
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 all: docker
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make sdist'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=win32 && make wheel-retagged wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux1_i686'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && make wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_i686'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
-	make wheel wheel-install
+	$(MAKE) wheel wheel-install
 
 
 # Rule for generating images from Dockerfiles.
@@ -53,8 +51,34 @@ distclean: clean
 RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
 .PRECIOUS: $(RPNPY_PACKAGE)
 
-# Get library version info
-include include/libs.mk
+# Check PLATFORM to determine the build environment
+ifeq ($(PLATFORM),manylinux1_x86_64)
+  export CC = gcc
+  export CFLAGS = -m64
+  export FC = gfortran
+  export FFLAGS = -m64
+else ifeq ($(PLATFORM),manylinux1_i686)
+  export CC = gcc
+  export CFLAGS = -m32
+  export FC = gfortran
+  export FFLAGS = -m32
+else ifeq ($(PLATFORM),manylinux2010_x86_64)
+  export CC = gcc
+  export CFLAGS = -m64
+  export FC = gfortran
+  export FFLAGS = -m64
+else ifeq ($(PLATFORM),win_amd64)
+  export CC = x86_64-w64-mingw32-gcc
+  export FC = x86_64-w64-mingw32-gfortran
+  export FFLAGS = -lws2_32 -lpthread
+  export SHAREDLIB_SUFFIX = dll
+else ifeq ($(PLATFORM),win32)
+  export CC = i686-w64-mingw32-gcc
+  export FC = i686-w64-mingw32-gfortran
+  export FFLAGS = -lws2_32 -lpthread
+  export SHAREDLIB_SUFFIX = dll
+endif
+
 
 .PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test
 
@@ -64,17 +88,21 @@ include include/libs.mk
 # This is needed for compiling the vgrid code in the manylinux containers.
 # Note: the final linking and construction of the shared libraries will be
 # done with the original distribution-provided gfortran.
+
 ifneq (,$(findstring manylinux,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
-ifeq ($(ARCH),x86_64)
-LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
-LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
-else ifeq ($(ARCH),i686)
+ifeq ($(PLATFORM),manylinux1_i686)
+ARCH = i686
 LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)-32bit
 LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
 LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
+else
+ARCH = x86_64
+LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
+LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
+LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
 endif
+
 LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
 LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
 $(LOCAL_GFORTRAN_DIR): cache/$(LOCAL_GFORTRAN_TAR) cache/$(LOCAL_GFORTRAN_EXTRA)
@@ -98,8 +126,8 @@ endif
 # Rule for building the wheel file.
 
 WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
-RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
+RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
@@ -152,7 +180,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Version info.
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
+	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/$$file; echo "# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
 	# Create a directory stub for the source code of dependent libraries.
@@ -183,7 +211,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# to Windows.
 	git apply patches/librmn.patch --directory=$@/src/librmn-$(LIBRMN_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
 	#############################################################
 	### vgrid source
 	#############################################################
@@ -191,10 +219,10 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Apply patches to allow vgrid to be compiled straight from gfortran.
 	git apply patches/vgrid.patch --directory=$@/src/vgrid-$(VGRID_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "\n! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/vgrid-$(VGRID_VERSION)/$$file; echo "! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
 	# Construct dependencies.mk ahead of time, to avoid a build-time
 	# dependence on perl.
-	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk RPN_TEMPLATE_LIBS=$(PWD)/$@/src PROJECT_ROOT=$(PWD)/$@/src
+	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src
 	#############################################################
 	### libburpc source
 	#############################################################
@@ -202,7 +230,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Apply patches to allow libburpc to be compiled straight from gfortran.
 	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
 	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "\n// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
+	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
 	# Remove broken links - causes problems when building from sdist.
 	find $@ -xtype l -delete
 	touch $@
@@ -216,16 +244,16 @@ EXTRA_LIBS = $(LOCAL_GFORTRAN_LIB)/libgfortran.so.3 \
              $(LOCAL_GFORTRAN_LIB)/libquadmath.so.0
 
 else ifeq ($(PLATFORM),win_amd64)
-EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
-EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+EXTRA_LIB_SRC1 = /usr/lib/gcc/x86_64-w64-mingw32/5.3-win32
+EXTRA_LIB_SRC2 = /usr/x86_64-w64-mingw32/lib
 EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_seh-1.dll \
              $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
              $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
              $(EXTRA_LIB_SRC2)/libwinpthread-1.dll
 
 else ifeq ($(PLATFORM),win32)
-EXTRA_LIB_SRC1 = /usr/lib/gcc/$(ARCH)-w64-mingw32/5.3-win32
-EXTRA_LIB_SRC2 = /usr/$(ARCH)-w64-mingw32/lib
+EXTRA_LIB_SRC1 = /usr/lib/gcc/i686-w64-mingw32/5.3-win32
+EXTRA_LIB_SRC2 = /usr/i686-w64-mingw32/lib
 EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll \
              $(EXTRA_LIB_SRC1)/libgfortran-3.dll \
              $(EXTRA_LIB_SRC1)/libquadmath-0.dll \
@@ -279,8 +307,8 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && make _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py

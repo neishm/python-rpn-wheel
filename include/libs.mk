@@ -1,10 +1,8 @@
-LIBRMN_VERSION = 016.2
-VGRID_VERSION = 6.4.b2
-LIBBURPC_VERSION = 1.9
-# commit id for libburpc version 1.9 with LGPL license
-LIBBURPC_COMMIT = 3a2d4f
+include include/versions.mk
+include include/compiler.mk
 
-include include/platforms.mk
+# Set default shared library extension.
+SHAREDLIB_SUFFIX ?= so
 
 # Locations to build static / shared libraries.
 LIBRMN_BUILDDIR = $(BUILDDIR)/librmn-$(LIBRMN_VERSION)
@@ -31,19 +29,19 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
 $(LIBRMN_SHARED): $(LIBRMN_STATIC)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o $(EXTRA_LINKS)
+	$(FC) -shared -o $@ *.o $(FFLAGS)
 	rm -f *.o
 
 $(LIBDESCRIP_SHARED): $(LIBDESCRIP_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
+	$(FC) -shared -o $@ *.o $(FFLAGS) -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
 	rm -f *.o
 
 $(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 	rm -f *.o
 	ar -x $<
-	$(GFORTRAN) -shared $(FFLAGS) -o $@ *.o -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
+	$(FC) -shared -o $@ *.o $(FFLAGS) -l$(LIBRMN_SHARED_NAME) -L$(dir $@)
 	rm -f *.o
 
 ######################################################################
@@ -51,16 +49,16 @@ $(LIBBURPC_SHARED): $(LIBBURPC_STATIC) $(LIBRMN_SHARED)
 
 $(LIBRMN_STATIC): $(LIBRMN_BUILDDIR)
 	cd $< && \
-	env RPN_TEMPLATE_LIBS=$(BUILDDIR) PROJECT_ROOT=$(BUILDDIR) PLATFORM=$(PLATFORM) make
+	env PROJECT_ROOT=$(BUILDDIR) $(MAKE)
 	touch $@
 
 $(LIBDESCRIP_STATIC): $(LIBDESCRIP_BUILDDIR)
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(BUILDDIR) PROJECT_ROOT=$(BUILDDIR) PLATFORM=$(PLATFORM) make
+	env PROJECT_ROOT=$(BUILDDIR) $(MAKE)
 	touch $@
 
 $(LIBBURPC_STATIC): $(LIBBURPC_BUILDDIR)
 	cd $</src && \
-	env RPN_TEMPLATE_LIBS=$(BUILDDIR) PROJECT_ROOT=$(BUILDDIR) PLATFORM=$(PLATFORM) make
+	env PROJECT_ROOT=$(BUILDDIR) $(MAKE)
 	touch $@
 
