@@ -3,9 +3,7 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.1.b3
-# Wheel files use slightly different version syntax.
-RPNPY_VERSION_ALTERNATE = 2.1b3
+include include/versions.mk
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
@@ -76,9 +74,6 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-# Get library version info
-include include/libs.mk
-
 .PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test
 
 
@@ -125,8 +120,8 @@ endif
 # Rule for building the wheel file.
 
 WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
-RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-$(PLATFORM).whl
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).dist-info
+RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
+WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
@@ -306,8 +301,8 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE)-py2.py3-none-manylinux1_x86_64.whl'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_ALTERNATE).zip'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py

@@ -1,9 +1,4 @@
-LIBRMN_VERSION = 016.2
-VGRID_VERSION = 6.4.b2
-LIBBURPC_VERSION = 1.9
-# commit id for libburpc version 1.9 with LGPL license
-LIBBURPC_COMMIT = 3a2d4f
-
+include include/versions.mk
 include include/makefile_suffix_rules.inc
 
 # Set default shared library extension.
