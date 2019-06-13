@@ -172,6 +172,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	rm -Rf $@
 	(cd cache/python-rpn && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
 	cp patches/CONTENTS $@
+	sed -i 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' $@/CONTENTS
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	cp patches/MANIFEST.in $@
@@ -229,6 +230,8 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_COMMIT)) | tar -xv
 	# Apply patches to allow libburpc to be compiled straight from gfortran.
 	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
+	# Remove a binary test file.
+	rm $@/src/libburpc-$(LIBBURPC_VERSION)/tests/2004021400_.new1
 	# Append a notice to modified source files, as per LGPL requirements.
 	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
 	# Remove broken links - causes problems when building from sdist.

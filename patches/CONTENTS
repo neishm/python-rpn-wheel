@@ -1,8 +1,7 @@
 This is a bundled source for building the Python-RPN package, along with all
 the RPN library dependencies.
 
-The src/ directory contains the source for the following libraries, where
-<VERSION> is the current version being used:
+The src/ directory contains additional source code for the following libraries:
 
 src/librmn-<VERSION>:
 	The source code for the "librmn" shared library.
