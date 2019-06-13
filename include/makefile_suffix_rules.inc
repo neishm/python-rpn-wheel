@@ -1,9 +1,8 @@
+include $(PROJECT_ROOT)/include/versions.mk
 include $(PROJECT_ROOT)/include/compiler.mk
 
-# Header files for linking against librmn
-PUBLIC_INCLUDES=$(PROJECT_ROOT)/librmn-016.2/PUBLIC_INCLUDES
-
-INC = -I. -I$(PROJECT_ROOT)/include -I$(PUBLIC_INCLUDES)
+INC = -I. -I$(PROJECT_ROOT)/include \
+      -I$(PROJECT_ROOT)/librmn-$(LIBRMN_VERSION)/PUBLIC_INCLUDES
 
 .c.o:
 	$(CC) -fPIC -O$(OPTIMIZ) $(CFLAGS) $(INC) -c $<
