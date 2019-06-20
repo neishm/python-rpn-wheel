@@ -50,6 +50,28 @@ index 447fd2c..2a066f1 100755
      def test_ll2rll_rot2(self):
          epsilon = 0.05#self.epsilon
          (xlat1, xlon1, xlat2, xlon2) = (0.,180.,1.,270.)
+diff --git a/share/tests/test_utils_fst3d.py b/share/tests/test_utils_fst3d.py
+index d0f4b43..492f92b 100755
+--- a/share/tests/test_utils_fst3d.py
++++ b/share/tests/test_utils_fst3d.py
+@@ -15,6 +15,7 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         import os, sys, datetime
+         import rpnpy.librmn.all as rmn
+         import rpnpy.utils.fstd3d as fstd3d
++        import rpnpy.vgd.all as vgd
+         fdate       = datetime.date.today().strftime('%Y%m%d') + '00_048'
+         CMCGRIDF    = os.getenv('CMCGRIDF').strip()
+         fileNameIn  = os.path.join(CMCGRIDF, 'prog', 'regeta', fdate)
+@@ -29,7 +30,9 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+             sys.exit(1)
+ 
+         try:
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+             rec3d = fstd3d.fst_read_3d(fileId, nomvar='TT', getPress=True, verbose=True)
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+         except:
+             raise
+         finally:
 diff --git a/share/tests/test_utils_thermofunc.py b/share/tests/test_utils_thermofunc.py
 index 6da6fa1..aaf4d1d 100755
 --- a/share/tests/test_utils_thermofunc.py
@@ -62,3 +84,43 @@ index 6da6fa1..aaf4d1d 100755
      def test_thermofunc(self):
          """
          """
+diff --git a/share/tests/test_vgd_base.py b/share/tests/test_vgd_base.py
+index 7889306..f8886df 100755
+--- a/share/tests/test_vgd_base.py
++++ b/share/tests/test_vgd_base.py
+@@ -34,6 +34,7 @@ class VGDBaseTests(unittest.TestCase):
+         vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+         v2 = vgd.vgd_get_opt('ALLOW_SIGMA')
+         self.assertEqual(v2,vgd.VGD_ALLOW_SIGMA)
++        vgd.vgd_put_opt('ALLOW_SIGMA',vgd.VGD_DISALLOW_SIGMA)
+ 
+     def testNewRead(self):
+         vgd0ptr = self._newReadBcmk()
+@@ -196,6 +197,7 @@ class VGDBaseTests(unittest.TestCase):
+     MB2PA = 100.
+ 
+     def testNewSigm(self):
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+         sigma = (0.011000, 0.027000, 0.051000, 0.075000, 0.101000, 0.127000,
+                  0.155000, 0.185000, 0.219000, 0.258000, 0.302000, 0.351000,
+                  0.405000, 0.460000, 0.516000, 0.574000, 0.631000, 0.688000,
+@@ -205,6 +207,7 @@ class VGDBaseTests(unittest.TestCase):
+         vkind = vgd.vgd_get(vgd0ptr, 'KIND')
+         vvers = vgd.vgd_get(vgd0ptr, 'VERS')
+         self.assertEqual((vkind,vvers), vgd.VGD_KIND_VER['sigm'])
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+ 
+     def testNewPres(self):
+         # pres = [x*self.MB2PA for x in (500.,850.,1000.)]
+diff --git a/share/tests/test_vgd_proto.py b/share/tests/test_vgd_proto.py
+index 9faaf46..b8f802d 100755
+--- a/share/tests/test_vgd_proto.py
++++ b/share/tests/test_vgd_proto.py
+@@ -46,6 +46,7 @@ class VGDProtoTests(unittest.TestCase):
+         ok = vgd.c_vgd_getopt_int(_C_WCHAR2CHAR('ALLOW_SIGMA'), ct.byref(v1), quiet)
+         self.assertEqual(ok,vgd.VGD_OK)
+         self.assertEqual(v1.value,vgd.VGD_ALLOW_SIGMA)
++        ok = vgd.c_vgd_putopt_int(_C_WCHAR2CHAR('ALLOW_SIGMA'), vgd.VGD_DISALLOW_SIGMA)
+ 
+     ## def testConstruct(self):
+     ##     vgd0ptr = vgd.c_vgd_construct()
