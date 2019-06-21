@@ -321,7 +321,7 @@ test:
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
 	virtualenv -p $(PYTHON) /tmp/myenv
-	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy 'numpy==1.8.2' pytest --cache-dir=cache/py
+	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy 'numpy<1.15' pytest --cache-dir=cache/py
 	rm -Rf $(RPNPY_PACKAGE)/share/tests/tmp
 	mkdir -p $(RPNPY_PACKAGE)/share/tests/tmp
 	cd $(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=$(PWD)/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
