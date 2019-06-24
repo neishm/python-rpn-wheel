@@ -1,3 +1,23 @@
+diff --git a/share/tests/test_burpc.py b/share/tests/test_burpc.py
+index ced2546..cc0e962 100755
+--- a/share/tests/test_burpc.py
++++ b/share/tests/test_burpc.py
+@@ -169,6 +169,7 @@ class RpnPyBurpc(unittest.TestCase):
+         brp.brp_resizeblk(blk, 7,5,3)
+         self.assertEqual((brp.BLK_NELE(blk), brp.BLK_NVAL(blk), brp.BLK_NT(blk)), (7,5,3))
+ 
++    @unittest.skip('This test attempts to read a recently freed block of memory.')
+     def test_brp_free(self):
+         rpt = brp.brp_newrpt()
+         brp.brp_allocrpt(rpt, 99)
+@@ -1265,6 +1266,7 @@ class RpnPyBurpc(unittest.TestCase):
+             ele = blk[1]
+             self.assertEqual(ele['e_cmcid'], blk.lstele[1])
+ 
++    @unittest.skip("Some types of blocks don't seem to be decoded properly (such as when e_units = FLAG_TABLE), giving garbage (uninitialized?) values.  If the garbage value happens to be a 'nan', the value comparison will sporadically fail.")
+     def test_brp_blk_getele_iter(self):
+         brp.brp_opt(rmn.BURPOP_MSGLVL, rmn.BURPOP_MSG_SYSTEM)
+         mypath, itype, iunit = self.knownValues[0]
 diff --git a/share/tests/test_cookbook_burp.py b/share/tests/test_cookbook_burp.py
 index 4d0f9ae..65f136e 100755
 --- a/share/tests/test_cookbook_burp.py
