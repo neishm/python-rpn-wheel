@@ -321,7 +321,7 @@ test:
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
 	virtualenv -p $(PYTHON) /tmp/myenv
-	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy 'numpy<1.15' pytest --cache-dir=cache/py
+	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
 	mkdir -p /tmp/build
 	cp -R $(RPNPY_PACKAGE) /tmp/build/
 	mkdir -p /tmp/$(RPNPY_PACKAGE)/share/tests/tmp
