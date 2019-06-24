@@ -16,7 +16,7 @@ all: docker
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native:
-	$(MAKE) wheel wheel-install
+	$(MAKE) wheel wheel-install PLATFORM=native
 
 
 # Rule for generating images from Dockerfiles.

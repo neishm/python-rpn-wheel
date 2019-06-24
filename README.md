@@ -17,7 +17,7 @@ sudo apt-get install docker.io
 Then, run `make` to generate the source bundle and Python wheel files for all supported platforms.
 These files are saved in the `wheelhouse/` directory.
 
-If you don't have docker installed, you could run `make sdist` to build the source bundle only.
+If you don't have docker installed, you could run `make sdist` to build the source bundle or `make native` to build a non-portable wheel for your platform.
 
 You can try installing the wheel files on another system (or in a virtualenv) and test it out.
 The easiest way to install is through `pip`:
