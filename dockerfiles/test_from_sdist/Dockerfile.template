@@ -5,7 +5,7 @@ RUN wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.2/git-lfs-lin
 RUN mkdir git-lfs && tar -C git-lfs/ -xzvf git-lfs-linux-amd64-v2.7.2.tar.gz
 RUN cd git-lfs && ./install.sh
 
-RUN apt-get install -y gfortran python-setuptools
+RUN apt-get update && apt-get install -y gfortran python-setuptools
 
 RUN groupadd -g $GID $GROUP || true
 RUN useradd -g $GID -u $UID $USER

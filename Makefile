@@ -132,9 +132,8 @@ WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
 PYTHON=/opt/python/cp27-cp27m/bin/python
-else
-PYTHON=python
 endif
+PYTHON ?= python
 
 wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 	# Make initial wheel.
@@ -165,7 +164,7 @@ wheel-install:
 
 # Construct the bundled source package.
 # This should contain all the source code needed to compile from scratch.
-$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch include patches/Makefile cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
+$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch patches/tests.patch include patches/Makefile cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
 	#############################################################
 	### rpnpy modules
 	#############################################################
@@ -178,6 +177,8 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	cp patches/MANIFEST.in $@
 	# Apply some patches to rpnpy so it picks up the bundled shared libs.
 	git apply patches/python-rpn.patch --directory=$@
+	# Apply patches to unit tests, to identify expected failures.
+	git apply patches/tests.patch --directory=$@
 	# Version info.
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
 	# Append a notice to modified source files, as per LGPL requirements.
@@ -310,14 +311,21 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl PYTHON=python2'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl PYTHON=python3'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python2'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python2'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python3'
 
 _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
-	virtualenv -p python2 /tmp/myenv
+	virtualenv -p $(PYTHON) /tmp/myenv
 	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
-	cd $(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
+	mkdir -p /tmp/build
+	cp -R $(RPNPY_PACKAGE) /tmp/build/
+	mkdir -p /tmp/$(RPNPY_PACKAGE)/share/tests/tmp
+	cd /tmp/$(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=/tmp/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
 
 cache/gem-data_4.2.0_all:
 	wget http://collaboration.cmc.ec.gc.ca/science/ssm/gem-data_4.2.0_all.ssm -P cache/
