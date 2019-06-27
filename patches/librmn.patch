@@ -300,7 +300,7 @@ index 35caacb..324eb55 100644
 +char *DlError(void) { return "Not available on Windows."; }
 +#endif
 diff --git a/primitives/Makefile b/primitives/Makefile
-index 67815f3..fdbb6f9 100644
+index 67815f3..a172ac4 100644
 --- a/primitives/Makefile
 +++ b/primitives/Makefile
 @@ -39,7 +39,7 @@ TARRLS = beta
@@ -312,6 +312,41 @@ index 67815f3..fdbb6f9 100644
  	./rmnlib_version $(RMNLIB_VERSION)
  
  rmnlib_version.f: rmnlib_v
+@@ -64,7 +64,7 @@ include $(RPN_TEMPLATE_LIBS)/include/makefile_suffix_rules.inc
+ FTNDECKS= \
+          ieeepak.F \
+          second.F      stkmem.F       tracebck.F\
+-         ccard.F       sx_timing_stubs.F              f_baseio.F \
++                       sx_timing_stubs.F              f_baseio.F \
+          vpow_ibm.F    ftn2c_helper_f.F90             ftn_prog_args.f90\
+          dlfcn.f90       msg.F90      
+ 
+@@ -104,7 +104,7 @@ OBJECTS= \
+          second.o          set_run_dir.o    stkmem.o \
+          sx_timing_stubs.o tracebck.o       up2low.o          vmm.o \
+          wkoffit.o         f_baseio.o       qqqcall.o         qqqr8sz.o\
+-         ccard.o           qvmcks.o         rah2char.o        fmain2cmain.o\
++                           qvmcks.o         rah2char.o        fmain2cmain.o\
+ 	 calc_crc.o        ibm32_ieee.o     second2.o         status_file.o\
+          stkmem2.o         prog_filename.o  rename_c.o        micro_sleep.o\
+          remove_c.o        gossip_sock.o    gossip_timeout.o  gnthread.o\
+@@ -138,7 +138,6 @@ rmtcall.o: 	rmtcall.c
+ second.o: 	second.F 
+ stkmem.o: 	stkmem.F 
+ tracebck.o: 	tracebck.F 
+-ccard.o:        ccard.F
+ sx_timing_stubs.o:sx_timing_stubs.F
+ 
+ tarball: $(FICHIERS) rmnlib_v
+@@ -161,7 +160,7 @@ locallib: gen_ec_arch_dir \
+          $(TEMPLIB)(second.o)          $(TEMPLIB)(set_run_dir.o)    $(TEMPLIB)(stkmem.o) \
+          $(TEMPLIB)(sx_timing_stubs.o) $(TEMPLIB)(tracebck.o)       $(TEMPLIB)(up2low.o)          $(TEMPLIB)(vmm.o) \
+          $(TEMPLIB)(wkoffit.o)         $(TEMPLIB)(f_baseio.o)       $(TEMPLIB)(qqqcall.o)         $(TEMPLIB)(qqqr8sz.o)\
+-         $(TEMPLIB)(ccard.o)           $(TEMPLIB)(qvmcks.o)         $(TEMPLIB)(rah2char.o)        $(TEMPLIB)(fmain2cmain.o)\
++                                       $(TEMPLIB)(qvmcks.o)         $(TEMPLIB)(rah2char.o)        $(TEMPLIB)(fmain2cmain.o)\
+          $(TEMPLIB)(calc_crc.o)        $(TEMPLIB)(ibm32_ieee.o)     $(TEMPLIB)(second2.o)         $(TEMPLIB)(status_file.o)\
+          $(TEMPLIB)(stkmem2.o)         $(TEMPLIB)(prog_filename.o)  $(TEMPLIB)(rename_c.o)        $(TEMPLIB)(micro_sleep.o)\
+          $(TEMPLIB)(remove_c.o)        $(TEMPLIB)(gossip_sock.o)    $(TEMPLIB)(gossip_timeout.o)  $(TEMPLIB)(gnthread.o)\
 diff --git a/primitives/c_baseio.c b/primitives/c_baseio.c
 index 657504e..ef4d8e8 100644
 --- a/primitives/c_baseio.c

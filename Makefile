@@ -89,7 +89,7 @@ endif
 # Note: the final linking and construction of the shared libraries will be
 # done with the original distribution-provided gfortran.
 
-ifneq (,$(findstring manylinux,$(PLATFORM)))
+ifneq (,$(findstring manylinux1,$(PLATFORM)))
 LOCAL_GFORTRAN_VERSION = gcc-4.9.4
 ifeq ($(PLATFORM),manylinux1_i686)
 ARCH = i686
@@ -243,9 +243,13 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 ######################################################################
 # libgfortran and related libraries which are needed at runtime.
 
-ifneq (,$(findstring manylinux,$(PLATFORM)))
+ifneq (,$(findstring manylinux1,$(PLATFORM)))
 EXTRA_LIBS = $(LOCAL_GFORTRAN_LIB)/libgfortran.so.3 \
              $(LOCAL_GFORTRAN_LIB)/libquadmath.so.0
+
+else ifeq ($(PLATFORM),manylinux2010_x86_64)
+EXTRA_LIBS = /usr/lib64/libgfortran.so.5 \
+             /usr/lib64/libquadmath.so.0
 
 else ifeq ($(PLATFORM),win_amd64)
 EXTRA_LIB_SRC1 = /usr/lib/gcc/x86_64-w64-mingw32/5.3-win32
