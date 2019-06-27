@@ -1,8 +1,0 @@
-FROM quay.io/pypa/manylinux1_i686
-
-RUN yum install -y perl-URI xz.i386 zip wget
-
-RUN groupadd -g $GID $GROUP || true
-RUN useradd -g $GID -u $UID $USER
-
-USER $USER

@@ -10,8 +10,6 @@ include include/versions.mk
 all: docker
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux1_i686-build linux32 bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux1_i686'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
@@ -22,13 +20,9 @@ native:
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux1_x86_64-build/Dockerfile dockerfiles/manylinux1_i686-build/Dockerfile dockerfiles/manylinux2010_x86_64-build/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
 	sudo docker pull ubuntu:16.04
 	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
-	sudo docker pull quay.io/pypa/manylinux1_x86_64
-	sudo docker build --tag rpnpy-manylinux1_x86_64-build dockerfiles/manylinux1_x86_64-build
-	sudo docker pull quay.io/pypa/manylinux1_i686
-	sudo docker build --tag rpnpy-manylinux1_i686-build dockerfiles/manylinux1_i686-build
 	sudo docker pull quay.io/pypa/manylinux2010_x86_64
 	sudo docker build --tag rpnpy-manylinux2010_x86_64-build dockerfiles/manylinux2010_x86_64-build
 	sudo docker build --tag rpnpy-test-from-wheel dockerfiles/test_from_wheel
@@ -52,21 +46,9 @@ RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
 .PRECIOUS: $(RPNPY_PACKAGE)
 
 # Check PLATFORM to determine the build environment
-ifeq ($(PLATFORM),manylinux1_x86_64)
+ifeq ($(PLATFORM),manylinux2010_x86_64)
   export CC = gcc
-  export CFLAGS = -m64
   export FC = gfortran
-  export FFLAGS = -m64
-else ifeq ($(PLATFORM),manylinux1_i686)
-  export CC = gcc
-  export CFLAGS = -m32
-  export FC = gfortran
-  export FFLAGS = -m32
-else ifeq ($(PLATFORM),manylinux2010_x86_64)
-  export CC = gcc
-  export CFLAGS = -m64
-  export FC = gfortran
-  export FFLAGS = -m64
 else ifeq ($(PLATFORM),win_amd64)
   export CC = x86_64-w64-mingw32-gcc
   export FC = x86_64-w64-mingw32-gfortran
@@ -84,45 +66,6 @@ endif
 
 
 ######################################################################
-# The stuff below is for getting an updated version of gfortran.
-# This is needed for compiling the vgrid code in the manylinux containers.
-# Note: the final linking and construction of the shared libraries will be
-# done with the original distribution-provided gfortran.
-
-ifneq (,$(findstring manylinux1,$(PLATFORM)))
-LOCAL_GFORTRAN_VERSION = gcc-4.9.4
-ifeq ($(PLATFORM),manylinux1_i686)
-ARCH = i686
-LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)-32bit
-LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure-32bit.tar.xz
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib
-else
-ARCH = x86_64
-LOCAL_GFORTRAN_DIR = $(PWD)/cache/$(LOCAL_GFORTRAN_VERSION)
-LOCAL_GFORTRAN_EXTRA = gcc-4.8-infrastructure.tar.xz
-LOCAL_GFORTRAN_LIB = $(LOCAL_GFORTRAN_DIR)/lib64
-endif
-
-LOCAL_GFORTRAN_TAR = $(LOCAL_GFORTRAN_VERSION).$(ARCH).tar.xz
-LOCAL_GFORTRAN_BIN = $(LOCAL_GFORTRAN_DIR)/bin
-$(LOCAL_GFORTRAN_DIR): cache/$(LOCAL_GFORTRAN_TAR) cache/$(LOCAL_GFORTRAN_EXTRA)
-	xzdec $< | tar -xv -C cache/
-	xzdec cache/$(LOCAL_GFORTRAN_EXTRA) | tar -xv -C $@
-	mv $@/bin $@/bin.orig
-	mkdir $@/bin
-	cd $@/bin && ln -s ../bin.orig/gfortran .
-	touch $@
-cache/$(LOCAL_GFORTRAN_TAR):
-	wget http://gfortran.meteodat.ch/download/$(ARCH)/releases/$(LOCAL_GFORTRAN_VERSION).tar.xz -P cache/
-	mv cache/$(LOCAL_GFORTRAN_VERSION).tar.xz $@
-cache/$(LOCAL_GFORTRAN_EXTRA):
-	wget http://gfortran.meteodat.ch/download/$(ARCH)/$(LOCAL_GFORTRAN_EXTRA) -P cache/
-endif
-#
-######################################################################
-
-
-######################################################################
 # Rule for building the wheel file.
 
 WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
@@ -135,7 +78,7 @@ PYTHON=/opt/python/cp27-cp27m/bin/python
 endif
 PYTHON ?= python
 
-wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
+wheel: $(RPNPY_PACKAGE)
 	# Make initial wheel.
 	rm -Rf $(WHEEL_TMPDIR)
 	mkdir -p $(WHEEL_TMPDIR)
@@ -145,7 +88,7 @@ wheel: $(RPNPY_PACKAGE) $(LOCAL_GFORTRAN_DIR)
 	# Use setup.py to build the shared libraries and create the initial
 	# wheel file.
 	# Pass in any overrides for local gfortran.
-	cd $(RPNPY_PACKAGE) && env PATH=$(LOCAL_GFORTRAN_BIN):$(PATH) LD_LIBRARY_PATH=$(LOCAL_GFORTRAN_LIB) EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
+	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
 
 wheel-retagged: wheel
 	# Fix filename and tags
@@ -243,11 +186,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 ######################################################################
 # libgfortran and related libraries which are needed at runtime.
 
-ifneq (,$(findstring manylinux1,$(PLATFORM)))
-EXTRA_LIBS = $(LOCAL_GFORTRAN_LIB)/libgfortran.so.3 \
-             $(LOCAL_GFORTRAN_LIB)/libquadmath.so.0
-
-else ifeq ($(PLATFORM),manylinux2010_x86_64)
+ifeq ($(PLATFORM),manylinux2010_x86_64)
 EXTRA_LIBS = /usr/lib64/libgfortran.so.5 \
              /usr/lib64/libquadmath.so.0
 
@@ -315,8 +254,6 @@ sdist: $(RPNPY_PACKAGE)
 # Rules for doing quick tests on the wheels.
 
 test:
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl PYTHON=python2'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux1_x86_64.whl PYTHON=python3'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python2'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python2'
