@@ -29,16 +29,23 @@ def inout (env, *path):
   outfile = join(args.outdir, env, *path)
   outdir = dirname(outfile)
   makedirs(outdir, exist_ok=True)
+  print ('->', outfile)
   return infile, outfile
 
-from shutil import copy
+def simple_copy (env, *path):
+  from shutil import copy
+  infile, outfile = inout(env, *path)
+  copy(infile, outfile)
 
-infile, outfile = inout('ATM_MODEL_DFILES','bcmk_burp','2007021900.brp')
-copy(infile, outfile)
-
-
-#copy(join(environ['ATM_MODEL_DFILES'],'bcmk','clim_gemdm320_1080x540_v2_de_francois_withiceline'),
-# join(args.outdir,'ATM_MODEL_DFILES','bcmk')
-#)
-
+simple_copy('ATM_MODEL_DFILES','bcmk_burp','2007021900.brp')
+simple_copy('ATM_MODEL_DFILES','bcmk_p','anlp2015070706_000')
+simple_copy('ATM_MODEL_DFILES','bcmk','geophy.fst')
+simple_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000')
+simple_copy('ATM_MODEL_DFILES','bcmk','2009042700_000')
+simple_copy('ATM_MODEL_DFILES','bcmk','2009042700_012')
+simple_copy('ATM_MODEL_DFILES','bcmk_vgrid','21001_SLEVE')
+simple_copy('ATM_MODEL_DFILES','bcmk_vgrid','21002_SLEVE')
+simple_copy('CMCGRIDF','prog','regeta','2019033000_048')
+simple_copy('AFSISIO','datafiles','constants','table_b_bufr')
+simple_copy('rpnpy','share','table_b_bufr_e')
 
