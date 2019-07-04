@@ -21,5 +21,14 @@ def testenv():
   copy( join(root,'CMCGRIDF','prog','regeta','2019033000_048'),
         join(tmpdir,'prog','regeta',datetime.today().strftime('%Y%m%d00_048'))
   )
-  _setenv ('CMCGRIDF',join(tmpdir,'prog','regeta'))
+  _setenv ('CMCGRIDF',tmpdir)
+  _setenv ('RPNPY_NOLONGTEST','1')
+  makedirs ('tmp', exist_ok=True)
+
+def test():
+  import pytest
+  from rpnpy import tests
+  from os.path import dirname
+  testenv()
+  pytest.main([dirname(tests.__file__),'--disable-warnings'])
 

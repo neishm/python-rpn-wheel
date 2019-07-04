@@ -119,18 +119,15 @@ setup (
   name = 'eccc_rpnpy_tests',
   version = '0.20190704.0',
   description = 'Minimal tests for checking an rpnpy installation.',
-  #long_description = open('DESCRIPTION').read(),
   packages = packages,
-  #py_modules = ['Fstdc','rpn_helpers','rpnstd'],
-  #scripts = glob('bin/rpy.*'),
-  #package_dir = {'rpnpy_tests':''},
-  #install_requires = ['numpy','pytz'],
-  #package_data = { 
-  #  'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
-  #  'rpnpy.librmn.share': ['table_b_bufr_e'],
-  #},
+  install_requires = ['pytest'],
   package_data = package_data,
-  entry_points = {'console_scripts':['rpy.testenv=rpnpy_tests:testenv']},
+  entry_points = {
+    'console_scripts':[
+      'rpy.testenv=rpnpy_tests:testenv',
+      'rpy.test=rpnpy_tests:test',
+    ],
+  },
   cmdclass={'getdata': GetData},
 )
 
