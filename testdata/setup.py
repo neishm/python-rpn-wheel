@@ -2,7 +2,7 @@
 
 files_in_progress = set()
 def inout (env, *path):
-  from os.path import join, dirname, exists
+  from os.path import join, dirname, exists, sep
   from os import makedirs, environ, remove
   from pathlib import Path
   infile = join(environ[env], *path)
@@ -75,10 +75,8 @@ ${CMCGRIDF}/prog/regeta/YYYYMMDD00_048 - vertical grid, TT at ip2=48
 ${HOME}/.profile
 """
 
-from setuptools import setup
 from setuptools.command.sdist import sdist
-
-class ReduceData(sdist):
+class GetData(sdist):
   def run(self):
     simple_copy('ATM_MODEL_DFILES','bcmk_burp','2007021900.brp')
 
@@ -112,15 +110,17 @@ class ReduceData(sdist):
     simple_copy('AFSISIO','datafiles','constants','table_b_bufr')
     simple_copy('rpnpy','share','table_b_bufr_e')
 
-    sdist.run(self)
 
 from setuptools import setup, find_packages
+packages = find_packages()
+package_data = dict([(pkg,'*') for pkg in packages])
+
 setup (
   name = 'eccc_rpnpy_tests',
   version = '0.20190704.0',
   description = 'Minimal tests for checking an rpnpy installation.',
   #long_description = open('DESCRIPTION').read(),
-  packages = find_packages(),
+  packages = packages,
   #py_modules = ['Fstdc','rpn_helpers','rpnstd'],
   #scripts = glob('bin/rpy.*'),
   #package_dir = {'rpnpy_tests':''},
@@ -129,7 +129,9 @@ setup (
   #  'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
   #  'rpnpy.librmn.share': ['table_b_bufr_e'],
   #},
-  cmdclass={'sdist': ReduceData},
+  package_data = package_data,
+  entry_points = {'console_scripts':['rpy.testenv=rpnpy_tests:testenv']},
+  cmdclass={'getdata': GetData},
 )
 
 
