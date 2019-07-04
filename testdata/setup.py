@@ -4,14 +4,19 @@ files_in_progress = set()
 def inout (env, *path):
   from os.path import join, dirname, exists
   from os import makedirs, environ, remove
+  from pathlib import Path
   infile = join(environ[env], *path)
-  outfile = join(dirname(__file__), env, *path)
+  outfile = join(dirname(__file__), 'rpnpy_tests', env, *path)
   outdir = dirname(outfile)
   makedirs(outdir, exist_ok=True)
   print ('->', outfile)
   if exists(outfile) and outfile not in files_in_progress:
     remove(outfile)
   files_in_progress.add(outfile)
+  # Treat each subdirectory as a Python sub-package.
+  while outdir != '':
+    Path(outdir,'__init__.py').touch()
+    outdir = dirname(outdir)
   return infile, outfile
 
 def simple_copy (env, *path):
@@ -109,15 +114,16 @@ class ReduceData(sdist):
 
     sdist.run(self)
 
+from setuptools import setup, find_packages
 setup (
-  name = 'eccc_rpnpy_testdata',
+  name = 'eccc_rpnpy_tests',
   version = '0.20190704.0',
-  description = 'Minimal test data for checking an rpnpy installation.',
+  description = 'Minimal tests for checking an rpnpy installation.',
   #long_description = open('DESCRIPTION').read(),
-  #packages = find_packages('lib'),
+  packages = find_packages(),
   #py_modules = ['Fstdc','rpn_helpers','rpnstd'],
   #scripts = glob('bin/rpy.*'),
-  #package_dir = {'':'lib'},
+  #package_dir = {'rpnpy_tests':''},
   #install_requires = ['numpy','pytz'],
   #package_data = { 
   #  'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
