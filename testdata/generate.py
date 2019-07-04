@@ -45,9 +45,14 @@ def fst_copy (env, *path, **kwargs):
   import rpnpy.librmn.all as rmn
   from os.path import exists
   from scipy.ndimage.fourier import fourier_uniform
+  # Smooth the field(s)?
   smoothed = kwargs.pop('smoothed',False)
+  # Use single (flat) value for the field(s)?
   flat = kwargs.pop('flat',False)
-  compressed = kwargs.pop('compressed',False)
+  # Similar to above, but only apply to 3D field(s)?
+  flat_3d = kwargs.pop('flat3d',False)
+  # Apply compression to the field(s)?
+  compressed = kwargs.pop('compressed',True)
   infile, outfile = inout(env, *path)
   inunit = rmn.fstopenall(infile, rmn.FST_RO)
   if exists(outfile):
@@ -59,6 +64,8 @@ def fst_copy (env, *path, **kwargs):
     if smoothed:
       rec['d'] = fourier_uniform(rec['d'].transpose(),size=(rec['nj']-10,rec['ni']-5)).transpose()
     elif flat:
+      rec['d'][:] = rec['d'].mean()
+    elif flat_3d and rec['ip1'] != 0:
       rec['d'][:] = rec['d'].mean()
     if compressed and rec['datyp'] < 128 and rec['ni']*rec['nj'] > 9999:
       # Compression is lossy on datyp=1???
@@ -83,8 +90,8 @@ fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='!!')
 fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='HY')
 fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='P0')
 
-fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_000',compressed=True)
-fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_012',compressed=True)
+fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_000',flat3d=True,compressed=True)
+fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_012',flat3d=True,compressed=True)
 
 fst_copy('ATM_MODEL_DFILES','bcmk_vgrid','21001_SLEVE')
 fst_copy('ATM_MODEL_DFILES','bcmk_vgrid','21002_SLEVE')
