@@ -44,6 +44,10 @@ def simple_copy (env, *path):
 def fst_copy (env, *path, **kwargs):
   import rpnpy.librmn.all as rmn
   from os.path import exists
+  from scipy.ndimage.fourier import fourier_uniform
+  smoothed = kwargs.pop('smoothed',False)
+  flat = kwargs.pop('flat',False)
+  compressed = kwargs.pop('compressed',False)
   infile, outfile = inout(env, *path)
   inunit = rmn.fstopenall(infile, rmn.FST_RO)
   if exists(outfile):
@@ -52,7 +56,11 @@ def fst_copy (env, *path, **kwargs):
     outunit = rmn.fstopenall(outfile, rmn.FST_RW)
   for key in rmn.fstinl(inunit, **kwargs):
     rec = rmn.fstluk(key)
-    if False and rec['datyp'] < 128 and rec['ni']*rec['nj'] > 9999:
+    if smoothed:
+      rec['d'] = fourier_uniform(rec['d'].transpose(),size=(rec['nj']-10,rec['ni']-5)).transpose()
+    elif flat:
+      rec['d'][:] = rec['d'].mean()
+    if compressed and rec['datyp'] < 128 and rec['ni']*rec['nj'] > 9999:
       rec['datyp'] += 128
     rmn.fstecr(outunit, rec)
   rmn.fstcloseall(outunit)
@@ -83,9 +91,9 @@ fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='>>')
 fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='!!')
 fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='P0')
 fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='PT')
-fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='TT',ip2=48)
-fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='UU',ip2=48)
-fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='VV',ip2=48)
+fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='TT',flat=True)
+fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='UU',flat=True)
+fst_copy('CMCGRIDF','prog','regeta','2019033000_048',nomvar='VV',flat=True)
 
 simple_copy('AFSISIO','datafiles','constants','table_b_bufr')
 simple_copy('rpnpy','share','table_b_bufr_e')
