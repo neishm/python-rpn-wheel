@@ -61,6 +61,9 @@ def fst_copy (env, *path, **kwargs):
     elif flat:
       rec['d'][:] = rec['d'].mean()
     if compressed and rec['datyp'] < 128 and rec['ni']*rec['nj'] > 9999:
+      # Compression is lossy on datyp=1???
+      if rec['datyp'] == 1:
+        rec['datyp'] = 6
       rec['datyp'] += 128
     rmn.fstecr(outunit, rec)
   rmn.fstcloseall(outunit)
@@ -80,8 +83,8 @@ fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='!!')
 fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='HY')
 fst_copy('ATM_MODEL_DFILES','bcmk_toctoc','2009042700_000',nomvar='P0')
 
-fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_000')
-fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_012')
+fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_000',compressed=True)
+fst_copy('ATM_MODEL_DFILES','bcmk','2009042700_012',compressed=True)
 
 fst_copy('ATM_MODEL_DFILES','bcmk_vgrid','21001_SLEVE')
 fst_copy('ATM_MODEL_DFILES','bcmk_vgrid','21002_SLEVE')
