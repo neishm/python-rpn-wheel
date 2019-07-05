@@ -268,6 +268,17 @@ _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p /tmp/$(RPNPY_PACKAGE)/share/tests/tmp
 	cd /tmp/$(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=/tmp/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
 
+testpkg:
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _testpkg WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
+
+_testpkg: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/python-rpn-lfs
+	mkdir -p cache/py
+	virtualenv -p $(PYTHON) /tmp/myenv
+	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy setuptools --cache-dir=cache/py
+	cp -R testdata /tmp
+	cd /tmp/testdata && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/python-rpn-lfs/cmcgridf rpnpy=$(PWD)/$(RPNPY_PACKAGE) TMPDIR=/tmp /tmp/myenv/bin/python setup.py getdata
+	cd /tmp/testdata && /tmp/myenv/bin/python setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
+
 cache/gem-data_4.2.0_all:
 	wget http://collaboration.cmc.ec.gc.ca/science/ssm/gem-data_4.2.0_all.ssm -P cache/
 	tar -xzvf $@.ssm -C cache/

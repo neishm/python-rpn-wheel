@@ -120,7 +120,7 @@ setup (
   version = '0.20190704.0',
   description = 'Minimal tests for checking an rpnpy installation.',
   packages = packages,
-  install_requires = ['pytest'],
+  install_requires = ['pytest','scipy'],
   package_data = package_data,
   entry_points = {
     'console_scripts':[
