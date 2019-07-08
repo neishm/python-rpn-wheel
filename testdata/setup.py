@@ -112,12 +112,13 @@ class GetData(sdist):
 
 
 from setuptools import setup, find_packages
+from rpnpy.version import __VERSION__
 packages = find_packages()
 package_data = dict([(pkg,'*') for pkg in packages])
 
 setup (
   name = 'eccc_rpnpy_tests',
-  version = '0.20190704.0',
+  version = __VERSION__,
   description = 'Minimal tests for checking an rpnpy installation.',
   packages = packages,
   install_requires = ['pytest','scipy'],
@@ -125,7 +126,7 @@ setup (
   entry_points = {
     'console_scripts':[
       'rpy.testenv=rpnpy_tests:testenv',
-      'rpy.test=rpnpy_tests:test',
+      'rpy.tests=rpnpy_tests:tests',
     ],
   },
   cmdclass={'getdata': GetData},

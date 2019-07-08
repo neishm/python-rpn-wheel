@@ -35,10 +35,9 @@ def testenv():
   if not exists('tmp'):
     makedirs ('tmp')
 
-def test():
+def tests():
   import pytest
-  from rpnpy import tests
-  from os.path import dirname
+  from os.path import dirname, join
   testenv()
-  pytest.main([dirname(tests.__file__),'--disable-warnings'])
+  pytest.main([join(dirname(__file__),'tests'),'--disable-warnings'])
 
