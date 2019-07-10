@@ -115,8 +115,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	#############################################################
 	rm -Rf $@
 	(cd cache/python-rpn && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
-	cp patches/CONTENTS $@
-	sed -i 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' $@/CONTENTS
+	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/CONTENTS
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	cp patches/MANIFEST.in $@
