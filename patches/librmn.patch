@@ -112,6 +112,31 @@ index 14be10d..814ce9e 100644
  lockf(fileno(fp),F_ULOCK,0L);
  #endif
  fclose(fp);
+diff --git a/compresseur/armn_compress_32.c b/compresseur/armn_compress_32.c
+index b2958b5..fe66213 100644
+--- a/compresseur/armn_compress_32.c
++++ b/compresseur/armn_compress_32.c
+@@ -4,7 +4,7 @@
+ #include <rpnmacros.h>
+ #include <unistd.h>
+ #include <zfstlib.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ #include <string.h>
+ 
+ int  c_armn_compress32(unsigned char *, float *, int, int, int, int);
+diff --git a/fstd98/FC_string.c b/fstd98/FC_string.c
+index 76d3f4c..9aa06a2 100644
+--- a/fstd98/FC_string.c
++++ b/fstd98/FC_string.c
+@@ -1,6 +1,6 @@
+ #include <rpnmacros.h>
+ #include <stdio.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ 
+ char **allocate_string_array(int ns)
+ {
 diff --git a/fstd98/fst_missing.c b/fstd98/fst_missing.c
 index 047b2b7..cf882c2 100644
 --- a/fstd98/fst_missing.c
@@ -133,9 +158,18 @@ index 047b2b7..cf882c2 100644
  int msg_level;
  
 diff --git a/fstd98/fstd98.c b/fstd98/fstd98.c
-index ec832d6..0781526 100644
+index ec832d6..ba79d97 100644
 --- a/fstd98/fstd98.c
 +++ b/fstd98/fstd98.c
+@@ -21,7 +21,7 @@
+ #include <stdio.h>
+ #ifdef WIN32    /*CHC/NRC*/
+ #include <string.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ #else
+ #include <unistd.h>
+ #include <alloca.h>
 @@ -34,7 +34,9 @@
  #include <string.h>
  #include <math.h>
@@ -347,6 +381,19 @@ index 67815f3..a172ac4 100644
           $(TEMPLIB)(calc_crc.o)        $(TEMPLIB)(ibm32_ieee.o)     $(TEMPLIB)(second2.o)         $(TEMPLIB)(status_file.o)\
           $(TEMPLIB)(stkmem2.o)         $(TEMPLIB)(prog_filename.o)  $(TEMPLIB)(rename_c.o)        $(TEMPLIB)(micro_sleep.o)\
           $(TEMPLIB)(remove_c.o)        $(TEMPLIB)(gossip_sock.o)    $(TEMPLIB)(gossip_timeout.o)  $(TEMPLIB)(gnthread.o)\
+diff --git a/primitives/array_file.c b/primitives/array_file.c
+index cd85f08..99d8016 100644
+--- a/primitives/array_file.c
++++ b/primitives/array_file.c
+@@ -4,7 +4,7 @@
+ #include <sys/types.h>
+ #include <sys/stat.h>
+ #include <fcntl.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ /*
+  contents of test file test_array_file.f90 follow
+ 
 diff --git a/primitives/c_baseio.c b/primitives/c_baseio.c
 index 657504e..ef4d8e8 100644
 --- a/primitives/c_baseio.c
@@ -508,6 +555,19 @@ index e003c79..a8beb67 100644
                  rv = -1;
          else
                  rv = 0;
+diff --git a/primitives/dmms.c b/primitives/dmms.c
+index 483b7a8..2b1f30f 100644
+--- a/primitives/dmms.c
++++ b/primitives/dmms.c
+@@ -25,7 +25,7 @@
+ #include <stdio.h>
+ #include <sys/types.h>
+ #include <stdlib.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ #if defined (NEC)
+ #include <sys/time.h>
+ #include <sys/resource.h>
 diff --git a/primitives/f_gettimeofday.c b/primitives/f_gettimeofday.c
 index 5e14140..d126d66 100644
 --- a/primitives/f_gettimeofday.c
@@ -739,6 +799,19 @@ index 0f50b37..399cbd2 100644
 +void register_dl_routines__() { return; }
 +void register_dl_routines() { return; }
 +#endif
+diff --git a/primitives/stkmem2.c b/primitives/stkmem2.c
+index af5daef..b9eb3d3 100644
+--- a/primitives/stkmem2.c
++++ b/primitives/stkmem2.c
+@@ -20,7 +20,7 @@
+ 
+ #include <rpnmacros.h>
+ #if !defined (NEC)
+-#include <malloc.h>
++#include <stdlib.h>
+ 
+ #ifdef WIN32    /*CHC/NRC*/
+ void f77name(stkmem2)(_int64 *f_nbytes,void **ptr)
 diff --git a/primitives/vmm.c b/primitives/vmm.c
 index 9e3ffbc..6be979d 100644
 --- a/primitives/vmm.c
@@ -752,3 +825,16 @@ index 9e3ffbc..6be979d 100644
  #else
  #include <unistd.h>
  #include <sys/types.h>
+diff --git a/template_utils/whiteboard/WhiteBoard.c b/template_utils/whiteboard/WhiteBoard.c
+index eafb9e8..4f40448 100644
+--- a/template_utils/whiteboard/WhiteBoard.c
++++ b/template_utils/whiteboard/WhiteBoard.c
+@@ -18,7 +18,7 @@
+  */
+ #include <stdlib.h>
+ #include <unistd.h>
+-#include <malloc.h>
++#include <stdlib.h>
+ #include <stdio.h>
+ #include <ctype.h>
+ #include <string.h>
