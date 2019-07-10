@@ -1,0 +1,19 @@
+language: python
+sudo: false
+matrix:
+  include:
+    - os: osx
+      language: generic
+
+before_install:
+  - echo $TRAVIS_OS_NAME
+  - brew install gcc
+  - python --version # just to check
+  - uname -a
+  - pip install --upgrade pip setuptools wheel
+script:
+  - pwd
+  - ls
+  - make sdist
+  - pip install wheelhouse/eccc_rpnpy*.zip -V
+  - python -c 'import rpnpy.librmn.all as rmn'
