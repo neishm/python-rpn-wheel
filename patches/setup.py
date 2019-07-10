@@ -58,7 +58,7 @@ setup (
   package_dir = {'':'lib'},
   install_requires = ['numpy','pytz'],
   package_data = {
-    'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll'],
+    'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll','*.dylib'],
     'rpnpy.librmn.share': ['table_b_bufr_e'],
   },
   distclass=BinaryDistribution,
