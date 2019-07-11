@@ -3,7 +3,7 @@ Overview
 The purpose of this tool is to compile and package [Python-RPN](https://github.com/meteokid/python-rpn) into self-contained [wheels](https://pythonwheels.com/) that can be installed on any system.
 These wheels could potentially be uploaded to a repository (such as [pypi.org](https://pypi.org/)) to streamline the package installation for end-users.
 This tool uses the [manylinux](https://github.com/pypa/manylinux) Docker image for building and bundling the required shared libraries (librmn, vgrid, libburpc, etc.).
-Similarly, Windows wheels are built with the [mingw-w64](http://mingw-w64.org/doku.php) compiler inside an Ubuntu Docker container.
+Windows wheels are cross-compiled with the [mingw-w64](http://mingw-w64.org/doku.php) compiler inside an Ubuntu Docker container.
 
 **Note:** This build recipe is not part of the `Python-RPN` package, and comes with no support.  Check the [Python-RPN project](https://github.com/meteokid/python-rpn) for official build recipes.
 
@@ -29,12 +29,15 @@ Requirements
 ============
 This tool will automatically download a copy of [Python-RPN](https://github.com/meteokid/python-rpn), [librmn](https://github.com/armnlib/librmn), [vgrid](https://gitlab.com/ECCC_CMDN/vgrid), [libburpc](https://github.com/josecmc/libburp), and the `armnlib` headers.
 
-Limitations
-===========
-This tool only builds for Linux and Windows platforms, and may not cover all
-permutations of those ABI tags.
-Please file a bug report if it won't work on your particular system.
+Building on other platforms
+===========================
+The build system is designed to run on an x86-64 Linux machine, building Linux and Windows wheels through appropriate Docker containers.
 
-There is no support for Mac OS X yet.  I don't have access to a Mac box, and
-can't find any reliable tools for cross-compiling from Linux.
+However, you should be able to build on other platforms provided you have the `gfortran` package.
+
+On **MacOSX**, you can install `gfortran` via [Homebrew](https://brew.sh/), with the command `brew install gcc`.
+
+On **Raspian**, you can install `gfortran` with the command `sudo apt-get install gfortran`.
+
+Once you have a working gfortran, you should be able to build a binary wheel with the command `make native`.
 
