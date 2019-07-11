@@ -12,8 +12,19 @@ before_install:
   - uname -a
   - pip install --upgrade pip setuptools wheel
 script:
-  - pwd
-  - ls
+  # Build and install from source.
   - make sdist
-  - pip install wheelhouse/eccc_rpnpy*.zip -V
-  - python -c 'import rpnpy.librmn.all as rmn'
+  - pip install wheelhouse/eccc_rpnpy-*.zip -V
+  # Run some basic checks to see if shared libraries can be loaded.
+  - make clean
+  - python -c "from rpnpy.librmn import librmn; print (librmn)"
+  - python -c "from rpnpy.vgd import libvgd; print (libvgd)"
+  - python -c "from rpnpy.burpc import libburpc; print (libburpc)"
+  # Run some unit tests.
+  - wget ftp://ccrp.tor.ec.gc.ca/pub/MNeish/wheelhouse/eccc_rpnpy_tests-2.1b3.zip -P wheelhouse/
+  - pip install wheelhouse/eccc_rpnpy_tests-2.1b3.zip
+  - rpy.tests
+  # Try native build.
+  - make native
+  - ls -lh wheelhouse/
+
