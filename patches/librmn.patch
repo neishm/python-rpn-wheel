@@ -782,11 +782,11 @@ index c097314..be3e855 100644
  }
 +#endif
 diff --git a/primitives/register_dl_routines.c b/primitives/register_dl_routines.c
-index 0f50b37..399cbd2 100644
+index 0f50b37..6c9dc6f 100644
 --- a/primitives/register_dl_routines.c
 +++ b/primitives/register_dl_routines.c
 @@ -1,3 +1,4 @@
-+#ifndef WIN32
++#if !defined(WIN32) && !defined(__MACH__)
  #include <dlfcn.h>
  
  void DlRegister(void *open, void *sym, void *error, void *close);
