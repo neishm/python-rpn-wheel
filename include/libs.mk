@@ -26,6 +26,10 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
 # Linux shared libraries need to be explicitly told to look in their current path for dependencies.
 %.so: FFLAGS := $(FFLAGS) -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
 
+# For MacOSX, try searching in current directory for libraries.
+# (Use similar behaviour to Windows DLLs).
+%.dylib: FFLAGS := $(FFLAGS) -dynamiclib -install_name @rpath/$@ -Wl,-rpath,.
+
 $(LIBRMN_SHARED): $(LIBRMN_STATIC)
 	rm -f *.o
 	ar -x $<

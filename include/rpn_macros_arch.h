@@ -14,6 +14,7 @@
 #endif
 #define INT_32 int
 #define INT_64 long long
+// Windows
 #ifdef WIN32
 #define _int64 INT_64
 #define open64 open
