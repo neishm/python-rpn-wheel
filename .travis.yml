@@ -11,6 +11,7 @@ before_install:
   - python --version # just to check
   - uname -a
   - pip install --upgrade pip setuptools wheel
+  - set -o pipefail
 script:
   # Build and install from source.
   - make sdist
