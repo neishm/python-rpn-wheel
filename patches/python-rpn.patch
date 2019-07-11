@@ -1,11 +1,11 @@
 diff --git a/DESCRIPTION b/DESCRIPTION
-index 1517cc5..fe5331e 100644
+index 4bc31c6..11993b5 100644
 --- a/DESCRIPTION
 +++ b/DESCRIPTION
 @@ -1 +1 @@
--A collection of python modules that act as an augmented interface to librmn, vgrtid and some more functions https://wiki.cmc.ec.gc.ca/wiki/Python-RPN
+-RPN Python tools and interface to RPN libraries https://wiki.cmc.ec.gc.ca/wiki/Python-RPN
 \ No newline at end of file
-+A collection of python modules that act as an augmented interface to librmn, vgrtid and some more functions https://github.com/meteokid/python-rpn
++RPN Python tools and interface to RPN libraries https://github.com/meteokid/python-rpn
 diff --git a/lib/rpnpy/burpc/__init__.py b/lib/rpnpy/burpc/__init__.py
 index ffdc484..5dab7fb 100755
 --- a/lib/rpnpy/burpc/__init__.py
@@ -98,10 +98,10 @@ index 6255e40..097217f 100755
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
 diff --git a/lib/rpnpy/librmn/burp.py b/lib/rpnpy/librmn/burp.py
-index 25f8cbb..6f8331e 100644
+index f252242..4f0bcfc 100644
 --- a/lib/rpnpy/librmn/burp.py
 +++ b/lib/rpnpy/librmn/burp.py
-@@ -1617,7 +1617,7 @@ def _mrbcvt_dict_full_init():
+@@ -1737,7 +1737,7 @@ def _mrbcvt_dict_full_init():
          mypath = os.path.join(AFSISIO.strip(), 'datafiles/constants',
                                _rbc.BURP_TABLE_B_FILENAME)
          if not (AFSISIO and os.path.isfile(mypath)):
@@ -109,7 +109,7 @@ index 25f8cbb..6f8331e 100644
 +            AFSISIO2 = os.getenv('rpnpy', os.path.dirname(__file__))
              mypath = os.path.join(AFSISIO2.strip(), 'share',
                                    _rbc.BURP_TABLE_B_FILENAME)
-         try:
+ 
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
 index 981041f..803e618 100755
 --- a/lib/rpnpy/vgd/__init__.py

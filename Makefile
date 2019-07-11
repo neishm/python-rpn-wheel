@@ -7,7 +7,7 @@ include include/versions.mk
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker
+all: docker fetch
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
@@ -114,7 +114,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	### rpnpy modules
 	#############################################################
 	rm -Rf $@
-	(cd cache/python-rpn && git archive --prefix=$@/ python-rpn_$(RPNPY_VERSION)) | tar -xv
+	(cd cache/python-rpn && git archive --prefix=$@/ $(RPNPY_COMMIT)) | tar -xv
 	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/CONTENTS
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
@@ -124,7 +124,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	# Apply patches to unit tests, to identify expected failures.
 	git apply patches/tests.patch --directory=$@
 	# Version info.
-	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.mk rpnpy_version.py
+	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.rpnpy.mk rpnpy_version.py
 	# Append a notice to modified source files, as per LGPL requirements.
 	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/$$file; echo "# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
@@ -218,7 +218,8 @@ cache/armnlib_2.0u_all:
 
 cache/python-rpn:
 	mkdir -p cache
-	git clone https://github.com/meteokid/python-rpn.git -b python-rpn_$(RPNPY_VERSION) $@
+	git clone https://github.com/meteokid/python-rpn.git $@
+	cd $@ && git checkout $(RPNPY_COMMIT)
 
 cache/librmn:
 	mkdir -p cache
