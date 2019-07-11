@@ -395,7 +395,7 @@ index cd85f08..99d8016 100644
   contents of test file test_array_file.f90 follow
  
 diff --git a/primitives/c_baseio.c b/primitives/c_baseio.c
-index 657504e..ef4d8e8 100644
+index 657504e..0854afe 100644
 --- a/primitives/c_baseio.c
 +++ b/primitives/c_baseio.c
 @@ -31,7 +31,7 @@
@@ -407,6 +407,15 @@ index 657504e..ef4d8e8 100644
  #define L_SET SEEK_SET
  #define L_INCR SEEK_CUR
  #define L_XTND SEEK_END
+@@ -73,7 +73,7 @@
+ #define tell64(fd) lseek64(fd,0,1)
+ #endif
+ 
+-#ifdef __CYGWIN__
++#if defined(__CYGWIN__) || defined(__MACH__)
+ #define lseek64 lseek
+ #define open64 open
+ #define off64_t off_t
 diff --git a/primitives/c_env_var_cracker.c b/primitives/c_env_var_cracker.c
 index 322cc51..de72ac3 100644
 --- a/primitives/c_env_var_cracker.c

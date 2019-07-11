@@ -20,12 +20,6 @@
 #define open64 open
 #define tell64 tell
 #endif
-// OSX
-#ifdef __MACH__
-#define open64 open
-#define tell64 tell
-#define lseek64 lseek
-#endif
 //#define tell(fdesc) lseek(fdesc,0,1)
 #define FORTRAN_loc_delta           4
 #define wordint INT_32
