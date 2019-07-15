@@ -265,7 +265,6 @@ _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
 	mkdir -p /tmp/build
 	cp -R $(RPNPY_PACKAGE) /tmp/build/
-	mkdir -p /tmp/$(RPNPY_PACKAGE)/share/tests/tmp
 	# Test with full data files
 	cd /tmp/$(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=/tmp/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
 	# Test again with the reduced data from eccc-rpnpy-tests package.

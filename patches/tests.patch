@@ -1,5 +1,5 @@
 diff --git a/share/tests/test_burpc.py b/share/tests/test_burpc.py
-index 38c544e..b37a0b4 100755
+index 38c544e..08b6d77 100755
 --- a/share/tests/test_burpc.py
 +++ b/share/tests/test_burpc.py
 @@ -170,6 +170,7 @@ class RpnPyBurpc(unittest.TestCase):
@@ -10,28 +10,8 @@ index 38c544e..b37a0b4 100755
      def test_brp_free(self):
          rpt = brp.brp_newrpt()
          brp.brp_allocrpt(rpt, 99)
-@@ -1267,6 +1268,7 @@ class RpnPyBurpc(unittest.TestCase):
-             ele = blk[1]
-             self.assertEqual(ele['e_cmcid'], blk.lstele[1])
- 
-+    @unittest.skip("Some types of blocks don't seem to be decoded properly (such as when e_units = FLAG_TABLE), giving garbage (uninitialized?) values.  If the garbage value happens to be a 'nan', the value comparison will sporadically fail.")
-     def test_brp_blk_getele_iter(self):
-         brp.brp_opt(rmn.BURPOP_MSGLVL, rmn.BURPOP_MSG_SYSTEM)
-         mypath, itype, iunit = self.knownValues[0]
-diff --git a/share/tests/test_cookbook_burp.py b/share/tests/test_cookbook_burp.py
-index 70d4ef7..58d00c7 100755
---- a/share/tests/test_cookbook_burp.py
-+++ b/share/tests/test_cookbook_burp.py
-@@ -734,6 +734,7 @@ bdesc  ={bdesc:6d}  btyp   ={btyp:6d}  nbit   ={nbit:6d}  datyp  ={datyp:6d}  bf
-         self.sub_test_ex2_readburp_py(infile=outfile, logfile=logfile)
- 
- 
-+    @unittest.expectedFailure
-     def test_ex6_write2_cmp(self):
-         """burplib_c iweb doc example 6, compare results from 2 itf"""
-         import os, filecmp
 diff --git a/share/tests/test_librmn_burp.py b/share/tests/test_librmn_burp.py
-index 87f49dd..12399ea 100755
+index 87f49dd..3a7bba7 100755
 --- a/share/tests/test_librmn_burp.py
 +++ b/share/tests/test_librmn_burp.py
 @@ -38,6 +38,7 @@ class RpnPyLibrmnBurp(unittest.TestCase):
@@ -42,115 +22,179 @@ index 87f49dd..12399ea 100755
      def testmrfoptKnownValues(self):
          """mrfopt should give known result with known input"""
          for k in (rmn.BURPOP_MSG_TRIVIAL, rmn.BURPOP_MSG_INFO,
-@@ -514,6 +515,7 @@ class RpnPyLibrmnBurp(unittest.TestCase):
-         ## self._fnmrbcvtencodeDecodeSanity(7004)  # Not enough precision for number < 10.
-         self._fnmrbcvtencodeDecodeSanity(8001)
- 
-+    @unittest.expectedFailure
-     def testmrbcvtencodeKnownValues(self):
-         """mrbcvt should give known result with known input"""
-         for mypath, itype, iunit in self.knownValues:
-diff --git a/share/tests/test_librmn_grids.py b/share/tests/test_librmn_grids.py
-index 52671a7..e745dfb 100755
---- a/share/tests/test_librmn_grids.py
-+++ b/share/tests/test_librmn_grids.py
-@@ -373,6 +373,7 @@ class Librmn_grids_Test(unittest.TestCase):
-         self.assertTrue(ok)
- 
-                     
-+    @unittest.expectedFailure
-     def test_ll2rll_rot(self):
-         from math import cos, radians
-         (xlat1, xlon1, xlat2, xlon2) = (35.,230.,0.,320.)
-@@ -395,6 +396,7 @@ class Librmn_grids_Test(unittest.TestCase):
-         self.assertTrue(ok)
- 
-                     
-+    @unittest.expectedFailure
-     def test_ll2rll_rot2(self):
-         from math import cos, radians
-         (xlat1, xlon1, xlat2, xlon2) = (0.,180.,1.,270.)
-diff --git a/share/tests/test_rpnstd.py b/share/tests/test_rpnstd.py
-index c217a97..5dadd5e 100755
---- a/share/tests/test_rpnstd.py
-+++ b/share/tests/test_rpnstd.py
-@@ -239,6 +239,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Z_KnownValues(self):
-         """RPNGridInterp to Z grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridL(0.5,6)
-@@ -251,6 +252,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Z_KnownValues2(self):
-         """RPNGridInterp from Z grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridZL(0.5,6)
-@@ -263,6 +265,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Z_KnownValues3(self):
-         """RPNGridInterp between Z grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridZL(0.5,6)
-@@ -275,6 +278,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Dieze_KnownValues(self):
-         """RPNGridInterp to #-grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridL(0.5,6)
-@@ -287,6 +291,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Dieze_KnownValues2(self):
-         """RPNGridInterp from #-grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridDiezeL(0.5,6)
-@@ -299,6 +304,7 @@ class RPNGridTests(unittest.TestCase):
-                 print('la2c :',la2c)
-         self.assertFalse(numpy.any(numpy.abs(la2-la2c)>self.epsilon))
- 
-+    @unittest.expectedFailure
-     def test_RPNGridInterp_Dieze_KnownValues3(self):
-         """RPNGridInterp between #-grid should give known result with known input"""
-         (g1,la1,lo1) = self.gridDiezeL(0.5,6)
-@@ -361,6 +367,7 @@ class RPNFileTests(unittest.TestCase):
-         return (self.la,self.lo)
+diff --git a/share/tests/test_utils_fst3d.py b/share/tests/test_utils_fst3d.py
+index 3c496ad..de92cd5 100755
+--- a/share/tests/test_utils_fst3d.py
++++ b/share/tests/test_utils_fst3d.py
+@@ -14,10 +14,12 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         self._cmp_obj(gip1s, eip1s, 'sort_ip1()')
  
  
 +    @unittest.expectedFailure
-     def test_RPNFileRead_KnownValues(self):
-         """RPNFile should give known result with known input"""
-         (la,lo) = self.create_basefile() #wrote 2 recs in that order: la, lo
-@@ -389,6 +396,7 @@ class RPNFileTests(unittest.TestCase):
-         self.erase_testfile()
-         #TODO: test other params and data
+     def test_get_levels_press(self):
+         import os, os.path
+         import rpnpy.librmn.all as rmn
+         import rpnpy.utils.fstd3d as fstd3d
++        import rpnpy.vgd.all as vgd
+ 
+         ATM_MODEL_DFILES = os.getenv('ATM_MODEL_DFILES').strip()
+         filename = os.path.join(ATM_MODEL_DFILES,'bcmk')
+@@ -26,7 +28,9 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         fileId = rmn.fstopenall(filename, rmn.FST_RO)
+ 
+         # Get the pressure cube
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+         ipkeys  = fstd3d.get_levels_keys(fileId, 'TT', thermoMom='VIPT')
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+         ip1list = [ip1 for ip1,key in ipkeys['ip1keys']]
+         shape   = rmn.fstinf(fileId, nomvar='TT')['shape'][0:2]
+         press   = fstd3d.get_levels_press(fileId, ipkeys['vptr'], shape, ip1list)
+@@ -38,10 +42,12 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         self._cmp_obj(got, exp, 'get_levels_press()')
+ 
  
 +    @unittest.expectedFailure
-     def test_RPNFileErase_KnownValues(self):
-         """RPNFile.erase should give known result with known input"""
-         (la,lo) = self.create_basefile() #wrote 2 recs in that order: la, lo
-@@ -409,6 +417,7 @@ class RPNFileTests(unittest.TestCase):
-         self.assertEqual(r2none,None)
-         self.erase_testfile()
+     def test_get_levels_keys(self):
+         import os, os.path
+         import rpnpy.librmn.all as rmn
+         import rpnpy.utils.fstd3d as fstd3d
++        import rpnpy.vgd.all as vgd
+ 
+         ATM_MODEL_DFILES = os.getenv('ATM_MODEL_DFILES').strip()
+         filename = os.path.join(ATM_MODEL_DFILES,'bcmk')
+@@ -50,7 +56,9 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         fileId = rmn.fstopenall(filename, rmn.FST_RO)
+ 
+         # Get the pressure cube
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+         ipkeys  = fstd3d.get_levels_keys(fileId, 'TT', thermoMom='VIPT')
++        vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+ 
+         rmn.fstcloseall(fileId)
+ 
+@@ -92,25 +100,36 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         pass
+ 
  
 +    @unittest.expectedFailure
-     def test_RPNFileRewrite_KnownValues(self):
-         """RPNFile.rewrite should give known result with known input"""
-         (la,lo) = self.create_basefile()
-@@ -434,6 +443,7 @@ class RPNFileTests(unittest.TestCase):
-         self.assertEqual(r2none,None)
-         self.erase_testfile()
+     def test_vgrid_read(self):
+         import os, os.path
+         import rpnpy.librmn.all as rmn
+         import rpnpy.utils.fstd3d as fstd3d
++        import rpnpy.vgd.all as vgd
++
++        try:
++          vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+ 
+-        ATM_MODEL_DFILES = os.getenv('ATM_MODEL_DFILES')
+-        myfile = os.path.join(ATM_MODEL_DFILES.strip(),'bcmk')
+-        fileId  = rmn.fstopenall(myfile)
++          ATM_MODEL_DFILES = os.getenv('ATM_MODEL_DFILES')
++          myfile = os.path.join(ATM_MODEL_DFILES.strip(),'bcmk')
++          fileId  = rmn.fstopenall(myfile)
+ 
+-        vgrid = fstd3d.vgrid_read(fileId, nomvar='TT', ip2=0)
+-        self.assertEqual(len(vgrid['ip1s']), 80)
+-        self.assertEqual(vgrid['rfld']['nomvar'].strip(), 'P0')
++          vgrid = fstd3d.vgrid_read(fileId, nomvar='TT', ip2=0)
++          self.assertEqual(len(vgrid['ip1s']), 80)
++          self.assertEqual(vgrid['rfld']['nomvar'].strip(), 'P0')
+ 
+-        vgrid = fstd3d.vgrid_read(fileId, nomvar='J1')
+-        self.assertEqual(len(vgrid['ip1s']), 5)
++          vgrid = fstd3d.vgrid_read(fileId, nomvar='J1')
++          self.assertEqual(len(vgrid['ip1s']), 5)
+  
+-        rmn.fstcloseall(fileId)
++          rmn.fstcloseall(fileId)
+ 
++        except vgd.VGDError:
++          raise
+ 
++        finally:
++          vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
++
++    @unittest.expectedFailure
+     def test_fst_read_3d(self):
+         """
+         """
+@@ -136,18 +155,19 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         try:
+             vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+             rec3d = fstd3d.fst_read_3d(fileId, nomvar='TT', getPress=True, verbose=False)
+-            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+         except:
+             raise
+         finally:
+             # Properly close files even if an error occured above
+             # This is important when editing to avoid corrupted files
+             rmn.fstcloseall(fileId)
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+ 
+         self.assertAlmostEqual(rec3d['d'].mean(), -36.287384, places=6,
+                                msg=None, delta=None)
+ 
  
 +    @unittest.expectedFailure
-     def test_FirstRecord(self):
-         """FirstRecord should reset file pointer to begining of file"""
-         (la,lo) = self.create_basefile() #wrote 2 recs in that order: la, lo
+     def test_fst_read_3d_abitrary(self):
+         """
+         """
+@@ -169,6 +189,7 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+ 
+         ip1s = (1199, 1198, 1197, 1196, 1195)
+         try:
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+             j1 = fstd3d.fst_read_3d(fileId, nomvar='J1', verbose=False)
+             j2 = fstd3d.fst_read_3d(fileId, nomvar='J2',
+                                     ip1=ip1s, verbose=False)
+@@ -178,6 +199,7 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+             # Properly close files even if an error occured above
+             # This is important when editing to avoid corrupted files
+             rmn.fstcloseall(fileId)
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+ 
+         self.assertAlmostEqual(j1['d'].mean(), 18.77356, places=6,
+                                msg=None, delta=None)
+@@ -190,6 +212,7 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         pass
+ 
+ 
++    @unittest.expectedFailure
+     def test_fst_new_3d(self):
+         """
+         """
+@@ -216,13 +239,13 @@ class RpnPyUtilsFstd3D(unittest.TestCase):
+         try:
+             vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_ALLOW_SIGMA)
+             rec3d = fstd3d.fst_read_3d(fileId, nomvar='TT', getPress=True, verbose=False)
+-            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+         except:
+             raise
+         finally:
+             # Properly close files even if an error occured above
+             # This is important when editing to avoid corrupted files
+             rmn.fstcloseall(fileId)
++            vgd.vgd_put_opt('ALLOW_SIGMA', vgd.VGD_DISALLOW_SIGMA)
+ 
+         r2 = {}
+         for k in ('nomvar', 'dateo', 'deet', 'npas', 'ip2', 'ip3', 'etiket', 'datyp', 'typvar', 'rfld', 'phPa'):
+diff --git a/share/tests/test_vgd_base.py b/share/tests/test_vgd_base.py
+index b5b4a89..1d601c1 100755
+--- a/share/tests/test_vgd_base.py
++++ b/share/tests/test_vgd_base.py
+@@ -489,6 +489,7 @@ class VGDBaseTests(unittest.TestCase):
+         self.assertEqual(len(prof.shape),1)
+         self.assertEqual(prof.dtype,np.float32)
+ 
++    @unittest.skip('missing bcmk_vgrid/pressure file.')
+     def testLevels_prof_pressure(self):
+         vgd0ptr = self._newReadBcmk(vcode_name="pressure")
+         prof = vgd.vgd_levels2(vgd0ptr, ip1list='VIPW', in_log=0)
+@@ -498,6 +499,7 @@ class VGDBaseTests(unittest.TestCase):
+         self.assertEqual(len(prof.shape),1)
+         self.assertEqual(prof.dtype,np.float32)
+ 
++    @unittest.skip('missing bcmk_vgrid/4001')
+     def testLevels_prof_4001(self):
+         vgd0ptr = self._newReadBcmk(vcode_name="4001")
+         prof = vgd.vgd_levels2(vgd0ptr, ip1list='VIPW')

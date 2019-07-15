@@ -6,7 +6,7 @@ def _setenv (varname, value):
 
 def testenv():
   import rpnpy_tests
-  from os.path import join, dirname, exists
+  from os.path import join, dirname
   from os import makedirs, walk, chmod
   import stat
   from tempfile import mkdtemp
@@ -32,8 +32,6 @@ def testenv():
   )
   _setenv ('CMCGRIDF',join(tmpdir,'CMCGRIDF'))
   _setenv ('RPNPY_NOLONGTEST','1')
-  if not exists('tmp'):
-    makedirs ('tmp')
 
 def tests():
   import pytest
