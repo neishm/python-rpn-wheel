@@ -6,6 +6,19 @@ index 4bc31c6..11993b5 100644
 -RPN Python tools and interface to RPN libraries https://wiki.cmc.ec.gc.ca/wiki/Python-RPN
 \ No newline at end of file
 +RPN Python tools and interface to RPN libraries https://github.com/meteokid/python-rpn
+diff --git a/lib/rpnpy/__init__.py b/lib/rpnpy/__init__.py
+index 50ec402..684b8d4 100644
+--- a/lib/rpnpy/__init__.py
++++ b/lib/rpnpy/__init__.py
+@@ -7,7 +7,7 @@ if sys.version_info < (3,):
+ else:
+     integer_types = (int,)
+     long = int
+-    # xrange = range
++    range = range
+ 
+ C_WCHAR2CHAR = lambda x: bytes(str(x).encode('ascii'))
+ C_WCHAR2CHAR.__doc__ = 'Convert str to bytes'
 diff --git a/lib/rpnpy/burpc/__init__.py b/lib/rpnpy/burpc/__init__.py
 index ffdc484..5dab7fb 100755
 --- a/lib/rpnpy/burpc/__init__.py
