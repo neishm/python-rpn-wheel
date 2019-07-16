@@ -117,6 +117,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	(cd cache/python-rpn && git archive --prefix=$@/ $(RPNPY_COMMIT)) | tar -xv
 	# Create a directory stub for the source code of dependent libraries.
 	mkdir -p $@/src
+	mkdir -p $@/src/patches
 	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/src/CONTENTS
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
@@ -127,8 +128,6 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	git apply patches/tests.patch --directory=$@
 	# Version info.
 	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.rpnpy.mk rpnpy_version.py
-	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/$$file; echo "# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
 	cp -PR include $@/src/
@@ -152,33 +151,27 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	### librmn source
 	#############################################################
 	(cd cache/librmn && git archive --prefix=$@/src/librmn-$(LIBRMN_VERSION)/ Release-$(LIBRMN_VERSION)) | tar -xv
-	# Apply patches to allow librmn to be compiled straight from gfortran,
+	# Copy patches to allow librmn to be compiled straight from gfortran,
 	# without the usual RPN build tools.  Also allows it to cross-compile
 	# to Windows.
-	git apply patches/librmn.patch --directory=$@/src/librmn-$(LIBRMN_VERSION)
-	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/librmn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/librmn-$(LIBRMN_VERSION)/$$file; done
+	cp patches/librmn.patch $@/src/patches/
 	#############################################################
 	### vgrid source
 	#############################################################
 	(cd cache/vgrid && git archive --prefix=$@/src/vgrid-$(VGRID_VERSION)/ $(VGRID_VERSION)) | tar -xv
-	# Apply patches to allow vgrid to be compiled straight from gfortran.
-	git apply patches/vgrid.patch --directory=$@/src/vgrid-$(VGRID_VERSION)
-	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.F90' patches/vgrid.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/vgrid-$(VGRID_VERSION)/$$file; echo "! This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/vgrid-$(VGRID_VERSION)/$$file; done
+	# Copy patches to allow vgrid to be compiled straight from gfortran.
+	cp patches/vgrid.patch $@/src/patches/
 	# Construct dependencies.mk ahead of time, to avoid a build-time
 	# dependence on perl.
-	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src
+	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src BASE_ARCH=dummy
 	#############################################################
 	### libburpc source
 	#############################################################
 	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_COMMIT)) | tar -xv
-	# Apply patches to allow libburpc to be compiled straight from gfortran.
-	git apply patches/libburpc.patch --directory=$@/src/libburpc-$(LIBBURPC_VERSION)
+	# Copy patches to allow libburpc to be compiled straight from gfortran.
+	cp patches/libburpc.patch $@/src/patches/
 	# Remove a binary test file.
 	rm $@/src/libburpc-$(LIBBURPC_VERSION)/tests/2004021400_.new1
-	# Append a notice to modified source files, as per LGPL requirements.
-	for file in $$(grep '^---.*\.c' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; echo "// This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/src/libburpc-$(LIBBURPC_VERSION)/$$file; done
 	touch $@
 
 

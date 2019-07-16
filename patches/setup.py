@@ -24,12 +24,19 @@ class BuildSharedLibs(build):
     import os
     from subprocess import check_call
     import platform
+    from glob import glob
 
     build.run(self)
     builddir = os.path.abspath(self.build_temp)
     sharedlib_dir = os.path.join(self.build_lib,'rpnpy','_sharedlibs')
     sharedlib_dir = os.path.abspath(sharedlib_dir)
-    self.copy_tree('src',builddir)
+    self.copy_tree('src',builddir,preserve_symlinks=1)
+    # Apply patches needed for compilation.
+    for libname in ['librmn','vgrid','libburpc']:
+      libsrc = glob(os.path.join(builddir,libname)+'-*')[0]
+      patchname = os.path.join(builddir,'patches',libname+'.patch')
+      with open(patchname,'r') as patch:
+        check_call(['patch', '-p1'], stdin=patch, cwd=libsrc)
 
     if 'SHAREDLIB_SUFFIX' in os.environ:
       sharedlib_suffix = os.environ['SHAREDLIB_SUFFIX']
