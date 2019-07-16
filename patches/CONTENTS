@@ -1,27 +1,16 @@
-This is a bundled source for building the Python-RPN package, along with all
-the RPN library dependencies.
+This directory contains additional source code for the following libraries:
 
-The src/ directory contains additional source code for the following libraries:
-
-src/librmn-<VERSION>:
+librmn-<VERSION>:
 	The source code for the "librmn" shared library.
 	Original source is available at https://github.com/armnlib/librmn.
 
-src/vgrid-<VERSION>:
+vgrid-<VERSION>:
 	The source code for the "libdescrip" ("vgrid") shared library.
 	Original source is available at https://gitlab.com/ECCC_CMDN/vgrid.
 
-src/libburpc-<VERSION>:
+libburpc-<VERSION>:
 	The source code for the "libburpc" shared library.
 	Original source is available at https://github.com/josecmc/libburp.
 
-The rest of the files are part of the Python-RPN package.  The original source
-for Python-RPN is available at https://github.com/meteokid/python-rpn.
-
-All source code is licensed under LGPL-2.1. Modifications have been made in
-order to build from a standard Linux environment.  Modified files have been
-marked with a comment at the end of the source.
-
-The recipe that was used to construct this source bundle can be obtained from
-https://github.com/neishm/python-rpn-wheel.
+All source code is licensed under LGPL-2.1.
 

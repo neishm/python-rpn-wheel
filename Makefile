@@ -115,7 +115,9 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	#############################################################
 	rm -Rf $@
 	(cd cache/python-rpn && git archive --prefix=$@/ $(RPNPY_COMMIT)) | tar -xv
-	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/CONTENTS
+	# Create a directory stub for the source code of dependent libraries.
+	mkdir -p $@/src
+	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/src/CONTENTS
 	cp patches/setup.py $@
 	cp patches/setup.cfg $@
 	cp patches/MANIFEST.in $@
@@ -129,8 +131,6 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	for file in $$(grep '^---.*\.py' patches/python-rpn.patch | sed 's/^--- a//' | uniq); do echo "" >> $@/$$file; echo "# This file was modified from the original source on $$(date +%Y-%m-%d)." >> $@/$$file; done
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	# Create a directory stub for the source code of dependent libraries.
-	mkdir -p $@/src
 	cp -PR include $@/src/
 	# Use simplified make rules for building from source package.
 	# (not doing cross-compiling in that context).
