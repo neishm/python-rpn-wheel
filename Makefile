@@ -126,8 +126,7 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	git apply patches/python-rpn.patch --directory=$@
 	# Apply patches to unit tests, to identify expected failures.
 	git apply patches/tests.patch --directory=$@
-	# Version info.
-	cd $@ && env ROOT=$(PWD)/$@ rpnpy=$(PWD)/$@  make -f include/Makefile.local.rpnpy.mk rpnpy_version.py
+	# Create shared lib directory.
 	mkdir -p $@/lib/rpnpy/_sharedlibs
 	touch $@/lib/rpnpy/_sharedlibs/__init__.py
 	cp -PR include $@/src/

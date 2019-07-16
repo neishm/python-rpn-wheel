@@ -3,6 +3,10 @@ from distutils.command.build import build
 import sys
 from glob import glob
 
+# Build version file.
+from subprocess import check_call
+check_call(['make','-f','include/Makefile.local.rpnpy.mk','rpnpy_version.py'], env={'rpnpy':'.'})
+
 # Add './lib' to the search path, so we can access the version info.
 sys.path.append('lib')
 from rpnpy.version import __VERSION__
