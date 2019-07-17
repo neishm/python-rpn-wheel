@@ -160,9 +160,6 @@ $(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/set
 	(cd cache/vgrid && git archive --prefix=$@/src/vgrid-$(VGRID_VERSION)/ $(VGRID_VERSION)) | tar -xv
 	# Copy patches to allow vgrid to be compiled straight from gfortran.
 	cp patches/vgrid.patch $@/src/patches/
-	# Construct dependencies.mk ahead of time, to avoid a build-time
-	# dependence on perl.
-	cd $@/src/vgrid-$(VGRID_VERSION)/src && make dependencies.mk PROJECT_ROOT=$(PWD)/$@/src BASE_ARCH=dummy
 	#############################################################
 	### libburpc source
 	#############################################################

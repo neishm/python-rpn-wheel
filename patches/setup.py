@@ -2,10 +2,21 @@ from setuptools import setup, Distribution, find_packages
 from distutils.command.build import build
 import sys
 from glob import glob
+import os
 
 # Build version file.
 from subprocess import check_call
+versionfile = os.path.join('lib','rpnpy','version.py')
+if os.path.exists(versionfile):
+  os.remove(versionfile)
 check_call(['make','-f','include/Makefile.local.rpnpy.mk','rpnpy_version.py'], env={'rpnpy':'.'})
+
+# Pre-build vgrid dependencies.mk to avoid build-time dependency on a Perl
+# module.
+vgridsrc = glob(os.path.join('src','vgrid-*','src'))[0]
+check_call(['make','dependencies.mk'],cwd=vgridsrc,env={'BASE_ARCH':'dummy'})
+#PROJECT_ROOT=$(PWD)/$@/src BASE_ARCH=dummy
+
 
 # Add './lib' to the search path, so we can access the version info.
 sys.path.append('lib')
