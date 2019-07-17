@@ -15,7 +15,6 @@ check_call(['make','-f','include/Makefile.local.rpnpy.mk','rpnpy_version.py'], e
 # module.
 vgridsrc = glob(os.path.join('src','vgrid-*','src'))[0]
 check_call(['make','dependencies.mk'],cwd=vgridsrc,env={'BASE_ARCH':'dummy'})
-#PROJECT_ROOT=$(PWD)/$@/src BASE_ARCH=dummy
 
 
 # Add './lib' to the search path, so we can access the version info.
@@ -81,7 +80,6 @@ setup (
   install_requires = ['numpy','pytz'],
   package_data = {
     'rpnpy._sharedlibs': ['*.so','*.so.*','*.dll','*.dylib'],
-    'rpnpy.librmn.share': ['table_b_bufr_e'],
   },
   distclass=BinaryDistribution,
   cmdclass={'build': BuildSharedLibs},

@@ -1,5 +1,4 @@
 include LICENSE VERSION DESCRIPTION
-recursive-include include *
+include include/Makefile.local.rpnpy.mk
 recursive-include src *
 prune src/vgrid-*/tests
-recursive-include share *
