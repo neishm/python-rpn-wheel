@@ -109,6 +109,8 @@ class GetData(sdist):
 
     simple_copy('AFSISIO','datafiles','constants','table_b_bufr')
     simple_copy('rpnpy','share','table_b_bufr_e')
+    simple_copy('rpnpy','share','table_b_bufr_f')
+    simple_copy('rpnpy','share','table_b_bufr_e_err')
 
 
 from setuptools import setup, find_packages
