@@ -12,14 +12,9 @@ RPNPY_COMMIT = 15009a2e
 # supported platform.
 all: docker
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) fetch sdist'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32 && $(MAKE) wheel PLATFORM=win_amd64'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _testpkg WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
-
-
-# Build a native wheel file (using host OS, assuming it's Linux-based).
-native:
-	$(MAKE) wheel wheel-install PLATFORM=native
 
 
 # Rule for generating images from Dockerfiles.
@@ -86,30 +81,17 @@ endif
 PYTHON ?= python
 
 wheel: $(RPNPY_PACKAGE)
-	# Make initial wheel.
-	rm -Rf $(WHEEL_TMPDIR)
-	mkdir -p $(WHEEL_TMPDIR)
-	# Remove old build directories, which may contain incompatible
-	# Fortran modules from other architectures / versions of gfortran.
-	rm -Rf $(RPNPY_PACKAGE)/build
-	# Use setup.py to build the shared libraries and create the initial
-	# wheel file.
-	# Pass in any overrides for local gfortran.
-	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py bdist_wheel --dist-dir $(WHEEL_TMPDIR)
+	mkdir -p $(PWD)/build/$(PLATFORM)
+	# Use setup.py to build the shared libraries and create the wheel file.
+	# Pass in any extra shared libraries needed for the wheel.
+	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/$(PLATFORM) --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
 
-wheel-retagged: wheel
-	# Fix filename and tags
-	cd $(WHEEL_TMPDIR) && unzip *.whl && rm *.whl
-	sed -i 's/^Tag:.*/Tag: py2.py3-none-$(PLATFORM)/' $(WHEEL_TMPDIST)/WHEEL
-	# Update SHA-1 sums for the RECORD file.
-	rm -Rf $(WHEEL_TMPDIST)/RECORD
-	$(PYTHON) -c "from distutils.core import Distribution; from wheel.bdist_wheel import bdist_wheel; bdist_wheel(Distribution()).write_record('$(WHEEL_TMPDIR)','$(WHEEL_TMPDIST)')"
-	rm -f $(WHEEL_TMPDIR)/*.whl
-	cd $(WHEEL_TMPDIR) && zip -r $(RETAGGED_WHEEL) .
-
-wheel-install:
-	mkdir -p $(PWD)/wheelhouse
-	cp $(WHEEL_TMPDIR)/*.whl $(PWD)/wheelhouse/
+# Build a native wheel file (using host OS, assuming it's Linux-based).
+native: $(RPNPY_PACKAGE)
+	mkdir -p $(PWD)/build/local
+	# Use setup.py to build the shared libraries and create the wheel file.
+	# Pass in any extra shared libraries needed for the wheel.
+	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/local --dist-dir $(PWD)/wheelhouse
 
 
 
