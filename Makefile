@@ -3,12 +3,15 @@
 # the CMC network.
 # See README.md for proper usage.
 
-include include/versions.mk
+RPNPY_VERSION = 2.1.b3c
+# Wheel files use slightly different version syntax.
+RPNPY_VERSION_WHEEL = 2.1.b3c
+RPNPY_COMMIT = 15009a2e
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker fetch
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
+all: docker
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) fetch sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=win32 && $(MAKE) wheel-retagged wheel-install PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel-retagged wheel-install PLATFORM=manylinux2010_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _testpkg WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
@@ -44,8 +47,10 @@ distclean: clean
 	rm -Rf cache/
 
 # Location of the bundled source package
-RPNPY_PACKAGE = build/python-rpn-$(RPNPY_VERSION)
-.PRECIOUS: $(RPNPY_PACKAGE)
+RPNPY_PACKAGE = cache/python-rpn-neishm
+RPNPY_SDIST = wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip
+
+.PRECIOUS: $(RPNPY_SDIST) $(RPNPY_PACKAGE)
 
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux2010_x86_64)
@@ -64,7 +69,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test _testpkg
+.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test _testpkg fetch
 
 
 ######################################################################
@@ -107,69 +112,6 @@ wheel-install:
 	cp $(WHEEL_TMPDIR)/*.whl $(PWD)/wheelhouse/
 
 
-# Construct the bundled source package.
-# This should contain all the source code needed to compile from scratch.
-$(RPNPY_PACKAGE): cache/python-rpn patches/CONTENTS patches/setup.py patches/setup.cfg patches/MANIFEST.in patches/python-rpn.patch patches/tests.patch include patches/Makefile cache/armnlib_2.0u_all cache/librmn patches/librmn.patch cache/vgrid patches/vgrid.patch cache/libburpc patches/libburpc.patch
-	#############################################################
-	### rpnpy modules
-	#############################################################
-	rm -Rf $@
-	(cd cache/python-rpn && git archive --prefix=$@/ $(RPNPY_COMMIT)) | tar -xv
-	# Create a directory stub for the source code of dependent libraries.
-	mkdir -p $@/src
-	mkdir -p $@/src/patches
-	sed 's/librmn-<VERSION>/librmn-$(LIBRMN_VERSION)/;s/vgrid-<VERSION>/vgrid-$(VGRID_VERSION)/;s/libburpc-<VERSION>/libburpc-$(LIBBURPC_VERSION)/;' patches/CONTENTS > $@/src/CONTENTS
-	cp patches/setup.py $@
-	cp patches/setup.cfg $@
-	cp patches/MANIFEST.in $@
-	# Apply some patches to rpnpy so it picks up the bundled shared libs.
-	git apply patches/python-rpn.patch --directory=$@
-	# Apply patches to unit tests, to identify expected failures.
-	git apply patches/tests.patch --directory=$@
-	# Create shared lib directory.
-	mkdir -p $@/lib/rpnpy/_sharedlibs
-	touch $@/lib/rpnpy/_sharedlibs/__init__.py
-	cp -PR include $@/src/
-	# Use simplified make rules for building from source package.
-	# (not doing cross-compiling in that context).
-	cp patches/Makefile $@/src/
-	#############################################################
-	### RPN headers and macros
-	#############################################################
-	cp cache/armnlib_2.0u_all/not_shared/AILLEURS/rpnmacros.h $@/src/include/
-	cp cache/armnlib_2.0u_all/not_shared/AILLEURS/ftnmacros.hf $@/src/include/
-	cp cache/armnlib_2.0u_all/include/rpnmacros_global.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/rmnlib.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/ftn2c_helper.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/gossip.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/cgossip.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/md5.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/arc4.h $@/src/include/
-	cp cache/armnlib_2.0u_all/include/fnom.h $@/src/include/
-	#############################################################
-	### librmn source
-	#############################################################
-	(cd cache/librmn && git archive --prefix=$@/src/librmn-$(LIBRMN_VERSION)/ Release-$(LIBRMN_VERSION)) | tar -xv
-	# Copy patches to allow librmn to be compiled straight from gfortran,
-	# without the usual RPN build tools.  Also allows it to cross-compile
-	# to Windows.
-	cp patches/librmn.patch $@/src/patches/
-	#############################################################
-	### vgrid source
-	#############################################################
-	(cd cache/vgrid && git archive --prefix=$@/src/vgrid-$(VGRID_VERSION)/ $(VGRID_VERSION)) | tar -xv
-	# Copy patches to allow vgrid to be compiled straight from gfortran.
-	cp patches/vgrid.patch $@/src/patches/
-	#############################################################
-	### libburpc source
-	#############################################################
-	(cd cache/libburpc && git archive --prefix=$@/src/libburpc-$(LIBBURPC_VERSION)/ $(LIBBURPC_COMMIT)) | tar -xv
-	# Copy patches to allow libburpc to be compiled straight from gfortran.
-	cp patches/libburpc.patch $@/src/patches/
-	# Remove a binary test file.
-	rm $@/src/libburpc-$(LIBBURPC_VERSION)/tests/2004021400_.new1
-	touch $@
-
 
 ######################################################################
 # libgfortran and related libraries which are needed at runtime.
@@ -196,47 +138,21 @@ EXTRA_LIBS = $(EXTRA_LIB_SRC1)/libgcc_s_sjlj-1.dll \
 endif
 
 
-######################################################################
-# Rules for getting the required source packages.
-
-# Required RPN headers and macros
-cache/armnlib_2.0u_all:
-	wget http://collaboration.cmc.ec.gc.ca/science/ssm/armnlib_2.0u_all.ssm -P cache/
-	tar -xzvf $@.ssm -C cache/
-	touch $@
-
-cache/python-rpn:
-	mkdir -p cache
-	git clone https://github.com/meteokid/python-rpn.git $@
-	cd $@ && git checkout $(RPNPY_COMMIT)
-
-cache/librmn:
-	mkdir -p cache
-	git clone https://github.com/armnlib/librmn.git -b Release-$(LIBRMN_VERSION) $@
-
-cache/vgrid:
-	mkdir -p cache
-	git clone https://gitlab.com/ECCC_CMDN/vgrid.git -b $(VGRID_VERSION) $@
-
-cache/libburpc:
-	mkdir -p cache
-	git clone https://github.com/josecmc/libburp.git $@
-	cd $@ && git checkout $(LIBBURPC_COMMIT)
-
-# Shortcut for fetching latest tags from the repositories.
-# Only needed when updating the library versions.
-fetch:
-	git -C cache/python-rpn fetch --tags
-	git -C cache/librmn fetch --tags
-	git -C cache/vgrid fetch --tags
-	git -C cache/libburpc fetch --tags
-
 
 ######################################################################
 # Rules for generated a bundled source distribution.
 
-sdist: $(RPNPY_PACKAGE)
+sdist: $(RPNPY_SDIST)
+
+$(RPNPY_SDIST): $(RPNPY_PACKAGE)
 	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
+	touch $@
+
+fetch: $(RPNPY_PACKAGE) patches/python-rpn.patch patches/tests.patch
+	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch && git checkout $(RPNPY_COMMIT) && git submodule update --init && git apply $(PWD)/patches/python-rpn.patch && git apply $(PWD)/patches/tests.patch
+
+$(RPNPY_PACKAGE):
+	git clone --recursive https://github.com/neishm/python-rpn.git $@
 
 
 ######################################################################
@@ -252,8 +168,8 @@ _test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
 	mkdir -p cache/py
 	virtualenv -p $(PYTHON) /tmp/myenv
 	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
-	mkdir -p /tmp/build
-	cp -R $(RPNPY_PACKAGE) /tmp/build/
+	mkdir -p /tmp/cache
+	cp -R $(RPNPY_PACKAGE) /tmp/cache/
 	# Test with full data files
 	cd /tmp/$(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=/tmp/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
 	# Test again with the reduced data from eccc-rpnpy-tests package.
