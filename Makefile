@@ -11,7 +11,7 @@ RPNPY_COMMIT = ac09bfd1
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 all: docker
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) fetch sdist'
+	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32 && $(MAKE) wheel PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _testpkg WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
@@ -124,7 +124,7 @@ endif
 ######################################################################
 # Rules for generated a bundled source distribution.
 
-sdist: $(RPNPY_SDIST)
+sdist: fetch $(RPNPY_SDIST)
 
 $(RPNPY_SDIST): $(RPNPY_PACKAGE)
 	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
