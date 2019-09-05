@@ -116,7 +116,7 @@ class GetData(sdist):
 from setuptools import setup, find_packages
 from rpnpy.version import __VERSION__
 packages = find_packages()
-package_data = dict([(pkg,'*') for pkg in packages])
+package_data = dict([(pkg,['*']) for pkg in packages])
 
 setup (
   name = 'eccc_rpnpy_tests',
