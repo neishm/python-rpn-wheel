@@ -3,10 +3,10 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.1.b3c
+RPNPY_VERSION = 2.1.b5
 # Wheel files use slightly different version syntax.
-RPNPY_VERSION_WHEEL = 2.1.b3c
-RPNPY_COMMIT = 43d17b
+RPNPY_VERSION_WHEEL = 2.1b5
+RPNPY_COMMIT = 13b5f1
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
@@ -130,10 +130,10 @@ $(RPNPY_SDIST): $(RPNPY_PACKAGE)
 	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 	touch $@
 
-fetch: $(RPNPY_PACKAGE) patches/python-rpn.patch patches/tests.patch
+fetch: $(RPNPY_PACKAGE) patches/tests.patch
 	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch  && git checkout $(RPNPY_COMMIT)
 	cd $< && git submodule update --init && cd lib/rpnpy/_sharedlibs && make clean
-	cd $< && git submodule update --init --recursive && git apply $(PWD)/patches/python-rpn.patch && git apply $(PWD)/patches/tests.patch
+	cd $< && git submodule update --init --recursive && git apply $(PWD)/patches/tests.patch
 
 $(RPNPY_PACKAGE):
 	git clone --recursive https://github.com/neishm/python-rpn.git $@

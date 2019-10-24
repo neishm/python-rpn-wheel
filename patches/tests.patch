@@ -22,6 +22,39 @@ index 87f49dd..3a7bba7 100755
      def testmrfoptKnownValues(self):
          """mrfopt should give known result with known input"""
          for k in (rmn.BURPOP_MSG_TRIVIAL, rmn.BURPOP_MSG_INFO,
+diff --git a/share/tests/test_librmn_fstd98.py b/share/tests/test_librmn_fstd98.py
+index 17bf7fa..9f4fcc7 100755
+--- a/share/tests/test_librmn_fstd98.py
++++ b/share/tests/test_librmn_fstd98.py
+@@ -157,24 +157,24 @@ class Librmn_fstd98_Test(unittest.TestCase):
+ 
+         ATM_MODEL_DFILES = os.getenv('ATM_MODEL_DFILES')
+         mydir = os.path.join(ATM_MODEL_DFILES.strip(),'bcmk/')    
+-        funit = rmn.fstopenall(mydir,rmn.FILE_MODE_RO)
++        funit = rmn.fstopenall([mydir+'geophy.fst',mydir+'2009042700_000',mydir+'2009042700_012'],rmn.FILE_MODE_RO)
+         self.assertTrue(funit>0,'fstopenall should return a valid file unit')
+ 
+         reclist = rmn.fstinl(funit,nomvar='VF')
+         self.assertEqual(len(reclist),26,' fstinl of VF found %d/26 rec ' % len(reclist))
+ 
+         reclist2 = rmn.fstinl(funit)
+-        self.assertEqual(len(reclist2),2788,' fstinl found %d/2788 rec ' % len(reclist))
++        self.assertEqual(len(reclist2),2211,' fstinl found %d/2211 rec ' % len(reclist2))
+         
+         #Note: c_fstnbrv on linked files returns only nrec on the first file
+         #      python's fstnbrv interface add results for all linked files
+         nrec = rmn.fstnbrv(funit)
+-        self.assertEqual(nrec,2788,' fstnbrv found %d/2788 rec ' % nrec)
++        self.assertEqual(nrec,2211,' fstnbrv found %d/2211 rec ' % nrec)
+ 
+         #Note: c_fstnbr on linked files returns only nrec on the first file
+         #      python's fstnbr interface add results for all linked files
+         nrec = rmn.fstnbr(funit)
+-        self.assertEqual(nrec,2788,' fstnbr found %d/2788 rec ' % nrec)
++        self.assertEqual(nrec,2211,' fstnbr found %d/2211 rec ' % nrec)
+ 
+         rmn.fstcloseall(funit)
+ 
 diff --git a/share/tests/test_utils_fst3d.py b/share/tests/test_utils_fst3d.py
 index 3c496ad..de92cd5 100755
 --- a/share/tests/test_utils_fst3d.py
