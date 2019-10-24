@@ -6,7 +6,7 @@
 RPNPY_VERSION = 2.1.b3c
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1.b3c
-RPNPY_COMMIT = 6b8cfa
+RPNPY_COMMIT = 43d17b
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
@@ -131,7 +131,9 @@ $(RPNPY_SDIST): $(RPNPY_PACKAGE)
 	touch $@
 
 fetch: $(RPNPY_PACKAGE) patches/python-rpn.patch patches/tests.patch
-	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch  && git checkout $(RPNPY_COMMIT) && git submodule update --init --recursive && git apply $(PWD)/patches/python-rpn.patch && git apply $(PWD)/patches/tests.patch
+	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch  && git checkout $(RPNPY_COMMIT)
+	cd $< && git submodule update --init && cd lib/rpnpy/_sharedlibs && make clean
+	cd $< && git submodule update --init --recursive && git apply $(PWD)/patches/python-rpn.patch && git apply $(PWD)/patches/tests.patch
 
 $(RPNPY_PACKAGE):
 	git clone --recursive https://github.com/neishm/python-rpn.git $@
