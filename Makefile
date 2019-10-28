@@ -14,7 +14,6 @@ all: docker
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32 && $(MAKE) wheel PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-wheel bash -c 'cd /io && $(MAKE) _testpkg WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-manylinux2010_x86_64.whl PYTHON=python3'
 
 
 # Rule for generating images from Dockerfiles.
@@ -64,7 +63,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test _testpkg fetch
+.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test fetch
 
 
 ######################################################################
@@ -130,10 +129,10 @@ $(RPNPY_SDIST): $(RPNPY_PACKAGE)
 	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 	touch $@
 
-fetch: $(RPNPY_PACKAGE) patches/tests.patch
+fetch: $(RPNPY_PACKAGE)
 	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch  && git checkout $(RPNPY_COMMIT)
 	cd $< && git submodule update --init && cd lib/rpnpy/_sharedlibs && make clean
-	cd $< && git submodule update --init --recursive && git apply $(PWD)/patches/tests.patch
+	cd $< && git submodule update --init --recursive
 
 $(RPNPY_PACKAGE):
 	git clone --recursive https://github.com/neishm/python-rpn.git $@
@@ -148,48 +147,14 @@ test:
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python2'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python3'
 
-_test: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/cmcgridf
+_test:
 	mkdir -p cache/py
 	virtualenv -p $(PYTHON) /tmp/myenv
 	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
 	mkdir -p /tmp/cache
 	cp -R $(RPNPY_PACKAGE) /tmp/cache/
-	# Test with full data files
-	cd /tmp/$(RPNPY_PACKAGE)/share/tests && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/cmcgridf rpnpy=/tmp/$(RPNPY_PACKAGE) TMPDIR=/tmp RPNPY_NOLONGTEST=1 /tmp/myenv/bin/python -m pytest --disable-warnings
-	# Test again with the reduced data from eccc-rpnpy-tests package.
-	/tmp/myenv/bin/pip install $(PWD)/wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION_WHEEL).zip --cache-dir=cache/py
-	/tmp/myenv/bin/rpy.tests
-
-_testpkg: cache/gem-data_4.2.0_all cache/afsisio_1.0u_all cache/python-rpn-lfs $(RPNPY_PACKAGE)
-	mkdir -p cache/py
-	virtualenv -p $(PYTHON) /tmp/myenv
-	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy setuptools --cache-dir=cache/py
-	cp -R testdata /tmp
-	cd /tmp/testdata && env ATM_MODEL_DFILES=$(PWD)/cache/gem-data_4.2.0_all/share/data/dfiles AFSISIO=$(PWD)/cache/afsisio_1.0u_all/data/ CMCGRIDF=$(PWD)/cache/python-rpn-lfs/cmcgridf rpnpy=$(PWD)/$(RPNPY_PACKAGE) TMPDIR=/tmp /tmp/myenv/bin/python setup.py getdata
-	mkdir -p /tmp/testdata/rpnpy_tests/tests
-	touch /tmp/testdata/rpnpy_tests/tests/__init__.py
-	cp $(RPNPY_PACKAGE)/share/tests/test*.py /tmp/testdata/rpnpy_tests/tests
-	cd /tmp/testdata && /tmp/myenv/bin/python setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
-
-cache/gem-data_4.2.0_all:
-	wget http://collaboration.cmc.ec.gc.ca/science/ssm/gem-data_4.2.0_all.ssm -P cache/
-	tar -xzvf $@.ssm -C cache/
-	touch $@
-
-cache/afsisio_1.0u_all:
-	wget http://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm -P cache/
-	tar -xzvf $@.ssm -C cache/
-	touch $@
-
-REGETA_FILE=cache/cmcgridf/prog/regeta/$(shell date +%Y%m%d)00_048
-
-cache/cmcgridf: $(REGETA_FILE)
-$(REGETA_FILE): cache/python-rpn-lfs
-	mkdir -p cache/cmcgridf/prog/regeta/
-	ln -sf $(PWD)/cache/python-rpn-lfs/cmcgridf/prog/regeta/2019033000_048 $(REGETA_FILE)
-
-cache/python-rpn-lfs:
-	git clone https://github.com/jeixav/python-rpn.git $@ -b feat/travis
-	git -C $@ lfs install --local
-	git -C $@ lfs pull
+	# Test with reduced data from eccc-rpnpy-tests package.
+	wget ftp://crd-data-donnees-rdc.ec.gc.ca/pub/CCMR/mneish/wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION).zip -P /tmp/cache/
+	/tmp/myenv/bin/pip install /tmp/cache/eccc_rpnpy_tests-$(RPNPY_VERSION).zip
+	cd /tmp && /tmp/myenv/bin/rpy.tests
 
