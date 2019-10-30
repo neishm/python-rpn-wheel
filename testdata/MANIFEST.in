@@ -1,4 +1,0 @@
-recursive-include ATM_MODEL_DFILES *
-recursive-include CMCGRIDF *
-recursive-include AFSISIO *
-recursive-include rpnpy *
