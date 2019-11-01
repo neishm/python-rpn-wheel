@@ -147,14 +147,16 @@ test:
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python2'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python3'
 
-_test:
+RPNPY_TESTS_WHEEL = wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION).zip
+
+# Test with reduced data from eccc-rpnpy-tests package.
+_test: $(RPNPY_TESTS_WHEEL)
 	mkdir -p cache/py
 	virtualenv -p $(PYTHON) /tmp/myenv
-	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) scipy pytest --cache-dir=cache/py
-	mkdir -p /tmp/cache
-	cp -R $(RPNPY_PACKAGE) /tmp/cache/
-	# Test with reduced data from eccc-rpnpy-tests package.
-	wget ftp://crd-data-donnees-rdc.ec.gc.ca/pub/CCMR/mneish/wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION).zip -P /tmp/cache/
-	/tmp/myenv/bin/pip install /tmp/cache/eccc_rpnpy_tests-$(RPNPY_VERSION).zip
+	/tmp/myenv/bin/pip install $(PWD)/$(WHEEL) --cache-dir=cache/py
+	/tmp/myenv/bin/pip install $(PWD)/$(RPNPY_TESTS_WHEEL) --cache-dir=cache/py
 	cd /tmp && /tmp/myenv/bin/rpy.tests
+
+$(RPNPY_TESTS_WHEEL):
+	wget ftp://crd-data-donnees-rdc.ec.gc.ca/pub/CCMR/mneish/wheelhouse/$(notdir $@) -P $(dir $@)
 
