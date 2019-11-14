@@ -50,7 +50,7 @@ fetch: clean-submodules
 	git submodule update --init --recursive
 clean: clean-submodules
 	rm -f .patched
-	rm -Rf build/ wheelhouse/ dockerfiles/*/Dockerfile
+	rm -Rf wheelhouse/ dockerfiles/*/Dockerfile
 distclean: clean
 	rm -Rf cache/
 
@@ -77,9 +77,7 @@ endif
 ######################################################################
 # Rule for building the wheel file.
 
-WHEEL_TMPDIR = $(PWD)/build/$(PLATFORM)
 RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
-WHEEL_TMPDIST = $(WHEEL_TMPDIR)/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).dist-info
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
@@ -88,17 +86,15 @@ endif
 PYTHON ?= python
 
 wheel: .patched
-	mkdir -p $(PWD)/build/$(PLATFORM)
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/$(PLATFORM) --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
+	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native: .patched
-	mkdir -p $(PWD)/build/local
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/local --dist-dir $(PWD)/wheelhouse
+	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse
 
 
 
