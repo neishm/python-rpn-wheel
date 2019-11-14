@@ -181,10 +181,10 @@ index 0000000..248e0d1
 +license_file = LICENSE
 diff --git a/setup.py b/setup.py
 new file mode 100644
-index 0000000..9c6f5ff
+index 0000000..70b312d
 --- /dev/null
 +++ b/setup.py
-@@ -0,0 +1,43 @@
+@@ -0,0 +1,44 @@
 +from setuptools import setup, find_packages
 +import sys
 +from glob import glob
@@ -226,5 +226,6 @@ index 0000000..9c6f5ff
 +  scripts = glob('bin/rpy.*'),
 +  package_dir = {'':'lib'},
 +  install_requires = ['numpy','pytz'],
++  extras_require = {'tests':'eccc-rpnpy-tests==%s'%__VERSION__},
 +  **extra_setup_args
 +)
