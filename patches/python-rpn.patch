@@ -1,0 +1,230 @@
+diff --git a/DESCRIPTION b/DESCRIPTION
+index 4bc31c6..11993b5 100644
+--- a/DESCRIPTION
++++ b/DESCRIPTION
+@@ -1 +1 @@
+-RPN Python tools and interface to RPN libraries https://wiki.cmc.ec.gc.ca/wiki/Python-RPN
+\ No newline at end of file
++RPN Python tools and interface to RPN libraries https://github.com/meteokid/python-rpn
+diff --git a/MANIFEST.in b/MANIFEST.in
+new file mode 100644
+index 0000000..f1de584
+--- /dev/null
++++ b/MANIFEST.in
+@@ -0,0 +1,9 @@
++include LICENSE VERSION DESCRIPTION KnownIssues
++recursive-include lib/rpnpy/_sharedlibs *
++prune lib/rpnpy/_sharedlibs/vgrid/tests
++prune lib/rpnpy/_sharedlibs/libburp/tests
++exclude lib/rpnpy/_sharedlibs/.git*
++exclude lib/rpnpy/_sharedlibs/*.pyc
++exclude lib/rpnpy/_sharedlibs/librmn/.git*
++exclude lib/rpnpy/_sharedlibs/vgrid/.git*
++exclude lib/rpnpy/_sharedlibs/libburp/.git*
+diff --git a/lib/rpnpy/burpc/__init__.py b/lib/rpnpy/burpc/__init__.py
+index ffdc484..5681690 100755
+--- a/lib/rpnpy/burpc/__init__.py
++++ b/lib/rpnpy/burpc/__init__.py
+@@ -85,22 +85,33 @@ def load_burpc_lib(burpc_version=None):
+     """
+     import os
+     import ctypes as ct
++    # Load librmn shared library here, to resolve symbols when running on MacOSX.
++    from rpnpy import librmn
+     ## import numpy  as np
+     ## import numpy.ctypeslib as npct
++    curdir = os.path.realpath(os.getcwd())
++    # Determine shared library suffix
++    try:
++      from rpnpy._sharedlibs import sharedlib_suffix as suffix
++      # For windows, need to change the current directory to see the .dll files.
++      os.chdir(os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs'))
++    except ImportError:
++      suffix = 'so'
+ 
+     if burpc_version is None:
+         BURPC_VERSION = os.getenv('RPNPY_BURPC_VERSION',
+                                   BURPC_VERSION_DEFAULT).strip()
+     else:
+         BURPC_VERSION = burpc_version
+-    burpc_libfile = 'libburp_c_shared' + BURPC_VERSION.strip() + '.so'
++    burpc_libfile = 'libburp_c_shared' + BURPC_VERSION.strip() + '.' + suffix
+ 
++    localpath   = [os.path.realpath(os.getcwd())]
+     pylibpath = os.getenv('PYTHONPATH', '').split(':')
+     ldlibpath = os.getenv('LD_LIBRARY_PATH', '').split(':')
+     eclibpath = os.getenv('EC_LD_LIBRARY_PATH', '').split()
+     BURPC_LIBPATH = check_burpc_libpath(burpc_libfile)
+     if not BURPC_LIBPATH:
+-        for path in pylibpath + ldlibpath + eclibpath:
++        for path in localpath + pylibpath + ldlibpath + eclibpath:
+             BURPC_LIBPATH = check_burpc_libpath(os.path.join(path.strip(),
+                                                            burpc_libfile))
+             if BURPC_LIBPATH:
+@@ -117,6 +128,7 @@ def load_burpc_lib(burpc_version=None):
+     except IOError:
+         raise IOError('ERROR: cannot load libburp_c shared version: ' +
+                       BURPC_VERSION)
++    os.chdir(curdir)
+     return (BURPC_VERSION, BURPC_LIBPATH, libburpc)
+ 
+ (BURPC_VERSION, BURPC_LIBPATH, libburpc) = load_burpc_lib()
+diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
+index 6255e40..b69e855 100755
+--- a/lib/rpnpy/librmn/__init__.py
++++ b/lib/rpnpy/librmn/__init__.py
+@@ -74,20 +74,29 @@ def loadRMNlib(rmn_version=None):
+     import ctypes as ct
+     ## import numpy  as np
+     ## import numpy.ctypeslib as npct
++    curdir = os.path.realpath(os.getcwd())
++    # Determine shared library suffix
++    try:
++      from rpnpy._sharedlibs import sharedlib_suffix as suffix
++      # For windows, need to change the current directory to see the .dll files.
++      os.chdir(os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs'))
++    except ImportError:
++      suffix = 'so'
+ 
+     if rmn_version is None:
+         RMN_VERSION = os.getenv('RPNPY_RMN_VERSION',
+                                 RMN_VERSION_DEFAULT).strip()
+     else:
+         RMN_VERSION = rmn_version
+-    rmn_libfile = 'librmnshared' + RMN_VERSION.strip() + '.so'
++    rmn_libfile = 'librmnshared' + RMN_VERSION.strip() + '.' + suffix
+ 
++    localpath   = [os.path.realpath(os.getcwd())]
+     pylibpath   = os.getenv('PYTHONPATH','').split(':')
+     ldlibpath   = os.getenv('LD_LIBRARY_PATH','').split(':')
+     eclibpath   = os.getenv('EC_LD_LIBRARY_PATH','').split()
+     RMN_LIBPATH = checkRMNlibPath(rmn_libfile)
+     if not RMN_LIBPATH:
+-        for path in pylibpath + ldlibpath + eclibpath:
++        for path in localpath + pylibpath + ldlibpath + eclibpath:
+             RMN_LIBPATH = checkRMNlibPath(os.path.join(path.strip(), rmn_libfile))
+             if RMN_LIBPATH:
+                 break
+@@ -95,6 +104,7 @@ def loadRMNlib(rmn_version=None):
+     if not RMN_LIBPATH:
+         raise IOError(-1, 'Failed to find librmn.so: ', rmn_libfile)
+ 
++    RMN_LIBPATH = os.path.abspath(RMN_LIBPATH)
+     librmn = None
+     try:
+         librmn = ct.cdll.LoadLibrary(RMN_LIBPATH)
+@@ -102,6 +112,7 @@ def loadRMNlib(rmn_version=None):
+     except IOError as e:
+         raise IOError('ERROR: cannot load librmn shared version: ' +
+                       RMN_VERSION, e)
++    os.chdir(curdir)
+     return (RMN_VERSION, RMN_LIBPATH, librmn)
+ 
+ (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
+diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
+index 981041f..644f995 100755
+--- a/lib/rpnpy/vgd/__init__.py
++++ b/lib/rpnpy/vgd/__init__.py
+@@ -75,22 +75,33 @@ def loadVGDlib(vgd_version=None):
+     """
+     import os
+     import ctypes as ct
++    # Load librmn shared library here, to resolve symbols when running on MacOSX.
++    from rpnpy import librmn
+     ## import numpy  as np
+     ## import numpy.ctypeslib as npct
++    curdir = os.path.realpath(os.getcwd())
++    # Determine shared library suffix
++    try:
++      from rpnpy._sharedlibs import sharedlib_suffix as suffix
++      # For windows, need to change the current directory to see the .dll files.
++      os.chdir(os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs'))
++    except ImportError:
++      suffix = 'so'
+ 
+     if vgd_version is None:
+         VGD_VERSION = os.getenv('RPNPY_VGD_VERSION',
+                                 VGD_VERSION_DEFAULT).strip()
+     else:
+         VGD_VERSION = vgd_version
+-    vgd_libfile = 'libdescripshared' + VGD_VERSION.strip() + '.so'
++    vgd_libfile = 'libdescripshared' + VGD_VERSION.strip() + '.' + suffix
+ 
++    localpath   = [os.path.realpath(os.getcwd())]
+     pylibpath   = os.getenv('PYTHONPATH','').split(':')
+     ldlibpath   = os.getenv('LD_LIBRARY_PATH','').split(':')
+     eclibpath   = os.getenv('EC_LD_LIBRARY_PATH','').split()
+     VGD_LIBPATH = checkVGDlibPath(vgd_libfile)
+     if not VGD_LIBPATH:
+-        for path in pylibpath + ldlibpath + eclibpath:
++        for path in localpath + pylibpath + ldlibpath + eclibpath:
+             VGD_LIBPATH = checkVGDlibPath(os.path.join(path.strip(), vgd_libfile))
+             if VGD_LIBPATH:
+                 break
+@@ -106,6 +117,8 @@ def loadVGDlib(vgd_version=None):
+     except IOError:
+         raise IOError('ERROR: cannot load libdescrip shared version: ' +
+                       VGD_VERSION)
++
++    os.chdir(curdir)
+     return (VGD_VERSION, VGD_LIBPATH, libvgd)
+ 
+ (VGD_VERSION, VGD_LIBPATH, libvgd) = loadVGDlib()
+diff --git a/setup.cfg b/setup.cfg
+new file mode 100644
+index 0000000..248e0d1
+--- /dev/null
++++ b/setup.cfg
+@@ -0,0 +1,3 @@
++# Include the license file in all binary distributions.
++[metadata]
++license_file = LICENSE
+diff --git a/setup.py b/setup.py
+new file mode 100644
+index 0000000..9c6f5ff
+--- /dev/null
++++ b/setup.py
+@@ -0,0 +1,43 @@
++from setuptools import setup, find_packages
++import sys
++from glob import glob
++import os
++
++# Build version file.
++from subprocess import check_call
++versionfile = os.path.join('lib','rpnpy','version.py')
++makefile = os.path.join('include','Makefile.local.rpnpy.mk')
++if os.path.exists(makefile):
++  if os.path.exists(versionfile):
++    os.remove(versionfile)
++  check_call(['make','-f','include/Makefile.local.rpnpy.mk','rpnpy_version.py'], env={'rpnpy':'.'})
++
++# Add './lib' to the search path, so we can access the version info.
++sys.path.append('lib')
++from rpnpy.version import __VERSION__
++
++# If the shared library source is available (for librmn, etc.)
++# then build the shared libraries and bundle them here.
++if os.path.exists(os.path.join('lib','rpnpy','_sharedlibs','librmn','Makefile')):
++  from rpnpy._sharedlibs import get_extra_setup_args
++  extra_setup_args = get_extra_setup_args('rpnpy','_sharedlibs')
++else:
++  extra_setup_args = {}
++
++
++setup (
++  name = 'eccc_rpnpy',
++  version = __VERSION__,
++  description = 'A Python interface for the RPN libraries at Environment and Climate Change Canada',
++  long_description = open('DESCRIPTION').read(),
++  url = 'https://github.com/meteokid/python-rpn',
++  author = 'Stephane Chamberland',
++  license = 'LGPL-2.1',
++  keywords = 'rpnpy python-rpn vgrid libdescrip librmn rmnlib',
++  packages = find_packages('lib'),
++  py_modules = ['Fstdc','rpn_helpers','rpnstd'],
++  scripts = glob('bin/rpy.*'),
++  package_dir = {'':'lib'},
++  install_requires = ['numpy','pytz'],
++  **extra_setup_args
++)

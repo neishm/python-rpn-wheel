@@ -6,7 +6,6 @@
 RPNPY_VERSION = 2.1.b5
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1b5
-RPNPY_COMMIT = 1933d4
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
@@ -35,16 +34,25 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Do
 %/Dockerfile: %/Dockerfile.template
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
+# Rule for patching up the source to work outside the CMC / science networks.
+.patched: .fetched
+	cd python-rpn && patch -p1 < $(PWD)/patches/python-rpn.patch
+	cd python-rpn/lib/rpnpy && ln -s ../../../python-rpn-libsrc _sharedlibs
+	touch $@
+
+# Rule for initializing the build process to do a fresh build.
+.fetched:
+	git submodule foreach git clean -xdf .
+	git submodule foreach git reset --hard HEAD
+	git submodule foreach git fetch --tags
+	rm -f .patched
+	git submodule update --init --recursive
+	touch $@
 clean:
 	rm -Rf build/ wheelhouse/ dockerfiles/*/Dockerfile
 distclean: clean
 	rm -Rf cache/
-
-# Location of the bundled source package
-RPNPY_PACKAGE = cache/python-rpn-neishm
-RPNPY_SDIST = wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip
-
-.PRECIOUS: $(RPNPY_SDIST) $(RPNPY_PACKAGE)
+	rm -f .patched .fetched
 
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux2010_x86_64)
@@ -63,7 +71,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel wheel-retagged wheel-install sdist clean distclean docker native test _test fetch
+.PHONY: all wheel sdist clean distclean docker native test _test
 
 
 ######################################################################
@@ -79,18 +87,18 @@ PYTHON=/opt/python/cp27-cp27m/bin/python
 endif
 PYTHON ?= python
 
-wheel: $(RPNPY_PACKAGE)
+wheel: .patched
 	mkdir -p $(PWD)/build/$(PLATFORM)
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/$(PLATFORM) --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
+	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/$(PLATFORM) --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
-native: $(RPNPY_PACKAGE)
+native: .patched
 	mkdir -p $(PWD)/build/local
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd $(RPNPY_PACKAGE) && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/local --dist-dir $(PWD)/wheelhouse
+	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --bdist-dir $(PWD)/build/local --dist-dir $(PWD)/wheelhouse
 
 
 
@@ -123,19 +131,8 @@ endif
 ######################################################################
 # Rules for generated a bundled source distribution.
 
-sdist: fetch $(RPNPY_SDIST)
-
-$(RPNPY_SDIST): $(RPNPY_PACKAGE)
-	cd $< && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
-	touch $@
-
-fetch: $(RPNPY_PACKAGE)
-	cd $< && git reset --hard HEAD && git clean -xdf . && git fetch  && git checkout $(RPNPY_COMMIT)
-	cd $< && git submodule update --init && cd lib/rpnpy/_sharedlibs && make clean
-	cd $< && git submodule update --init --recursive
-
-$(RPNPY_PACKAGE):
-	git clone --recursive https://github.com/neishm/python-rpn.git $@
+sdist: .patched
+	cd python-rpn && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 
 
 ######################################################################

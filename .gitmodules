@@ -1,0 +1,6 @@
+[submodule "python-rpn"]
+	path = python-rpn
+	url = https://github.com/meteokid/python-rpn.git
+[submodule "python-rpn-libsrc"]
+	path = python-rpn-libsrc
+	url = https://github.com/neishm/python-rpn-libsrc.git
