@@ -9,7 +9,7 @@ RPNPY_VERSION_WHEEL = 2.1b5
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker
+all: docker .patched
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32 && $(MAKE) wheel PLATFORM=win_amd64'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
@@ -35,24 +35,24 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Do
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
 # Rule for patching up the source to work outside the CMC / science networks.
-.patched: .fetched
+.patched:
+	$(MAKE) fetch
 	cd python-rpn && patch -p1 < $(PWD)/patches/python-rpn.patch
 	cd python-rpn/lib/rpnpy && ln -s ../../../python-rpn-libsrc _sharedlibs
 	touch $@
 
 # Rule for initializing the build process to do a fresh build.
-.fetched:
+clean-submodules:
 	git submodule foreach git clean -xdf .
 	git submodule foreach git reset --hard HEAD
+fetch: clean-submodules
 	git submodule foreach git fetch --tags
-	rm -f .patched
 	git submodule update --init --recursive
-	touch $@
-clean:
+clean: clean-submodules
+	rm -f .patched
 	rm -Rf build/ wheelhouse/ dockerfiles/*/Dockerfile
 distclean: clean
 	rm -Rf cache/
-	rm -f .patched .fetched
 
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux2010_x86_64)
@@ -71,7 +71,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel sdist clean distclean docker native test _test
+.PHONY: all wheel sdist clean clean-submodules distclean docker native test _test fetch
 
 
 ######################################################################
