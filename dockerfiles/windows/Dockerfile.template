@@ -1,8 +1,11 @@
 FROM ubuntu:16.04
 
-RUN apt-get update && apt-get install -y gcc-mingw-w64 gfortran-mingw-w64 perl make git python python-setuptools python-wheel unzip zip cpp liburi-perl wget
+RUN apt-get update && apt-get install -y make python virtualenv wget
 
 RUN groupadd -g $GID $GROUP || true
 RUN useradd -g $GID -u $UID $USER
+
+RUN apt-get update && apt-get install -y patch python-setuptools python-wheel
+RUN apt-get update && apt-get install -y gcc-mingw-w64 gfortran-mingw-w64
 
 USER $USER
