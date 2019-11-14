@@ -6,7 +6,7 @@
 RPNPY_VERSION = 2.1.b5
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1b5
-RPNPY_COMMIT = 13b5f1
+RPNPY_COMMIT = 1933d4
 
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
