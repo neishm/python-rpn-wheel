@@ -7,12 +7,14 @@ RPNPY_VERSION = 2.1.b5
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1b5
 
+all: sdist wheels
+
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
-all: docker .patched
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) sdist'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32 && $(MAKE) wheel PLATFORM=win_amd64'
-	sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
+wheels: docker
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32'
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win_amd64'
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
 
 
 # Rule for generating images from Dockerfiles.
@@ -34,25 +36,22 @@ docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Do
 %/Dockerfile: %/Dockerfile.template
 	sed 's/$$GID/'`id -g`'/;s/$$GROUP/'`id -ng`'/;s/$$UID/'`id -u`'/;s/$$USER/'`id -nu`'/' $< > $@
 
-# Rule for patching up the source to work outside the CMC / science networks.
-.patched:
-	$(MAKE) fetch
-	cd python-rpn && patch -p1 < $(PWD)/patches/python-rpn.patch
-	cd python-rpn/lib/rpnpy && ln -s ../../../python-rpn-libsrc _sharedlibs
-	touch $@
-
-# Rule for initializing the build process to do a fresh build.
 clean-submodules:
 	git submodule foreach git clean -xdf .
 	git submodule foreach git reset --hard HEAD
 fetch: clean-submodules
 	git submodule foreach git fetch --tags
-	git submodule update --init --recursive
 clean: clean-submodules
-	rm -f .patched
 	rm -Rf wheelhouse/ dockerfiles/*/Dockerfile
 distclean: clean
 	rm -Rf cache/
+# Rule for initializing the build process to do a fresh build.
+init: clean-submodules
+	git submodule update --init --recursive
+	cd python-rpn && patch -p1 < $(PWD)/patches/python-rpn.patch
+	cd python-rpn/lib/rpnpy && ln -s ../../../python-rpn-libsrc _sharedlibs
+	touch $@
+
 
 # Check PLATFORM to determine the build environment
 ifeq ($(PLATFORM),manylinux2010_x86_64)
@@ -71,7 +70,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel sdist clean clean-submodules distclean docker native test _test fetch
+.PHONY: all wheel sdist clean clean-submodules distclean docker native test _test fetch init
 
 
 ######################################################################
@@ -85,13 +84,13 @@ PYTHON=/opt/python/cp27-cp27m/bin/python
 endif
 PYTHON ?= python
 
-wheel: .patched
+wheel:
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
 	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
-native: .patched
+native: init
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
 	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse
@@ -127,7 +126,7 @@ endif
 ######################################################################
 # Rules for generated a bundled source distribution.
 
-sdist: .patched
+sdist: init
 	cd python-rpn && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 
 
