@@ -12,9 +12,9 @@ all: sdist wheels
 # This rule bootstraps the build process to run in a docker container for each
 # supported platform.
 wheels: docker
-	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win32'
-	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=win_amd64'
-	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) wheel PLATFORM=manylinux2010_x86_64'
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) _wheel PLATFORM=win32'
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) _wheel PLATFORM=win_amd64'
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) _wheel PLATFORM=manylinux2010_x86_64'
 
 
 # Rule for generating images from Dockerfiles.
@@ -70,7 +70,7 @@ else ifeq ($(PLATFORM),win32)
 endif
 
 
-.PHONY: all wheel sdist clean clean-submodules distclean docker native test _test fetch init
+.PHONY: all _wheel wheels sdist clean clean-submodules distclean docker native test _test fetch init
 
 
 ######################################################################
@@ -84,7 +84,7 @@ PYTHON=/opt/python/cp27-cp27m/bin/python
 endif
 PYTHON ?= python
 
-wheel:
+_wheel:
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
 	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
