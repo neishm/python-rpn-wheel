@@ -3,9 +3,9 @@
 # the CMC network.
 # See README.md for proper usage.
 
-RPNPY_VERSION = 2.1.b5
+RPNPY_VERSION = 2.1-rc11
 # Wheel files use slightly different version syntax.
-RPNPY_VERSION_WHEEL = 2.1b5
+RPNPY_VERSION_WHEEL = 2.1rc11
 
 all: sdist wheels
 
@@ -139,7 +139,7 @@ test:
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python2'
 	sudo docker run --rm -v $(PWD):/io -it rpnpy-test-from-sdist bash -c 'cd /io && $(MAKE) _test WHEEL=wheelhouse/eccc_rpnpy-$(RPNPY_VERSION_WHEEL).zip PYTHON=python3'
 
-RPNPY_TESTS_WHEEL = wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION).zip
+RPNPY_TESTS_WHEEL = wheelhouse/eccc_rpnpy_tests-$(RPNPY_VERSION_WHEEL).zip
 
 # Test with reduced data from eccc-rpnpy-tests package.
 _test: $(RPNPY_TESTS_WHEEL)

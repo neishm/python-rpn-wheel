@@ -21,6 +21,13 @@ index 0000000..f1de584
 +exclude lib/rpnpy/_sharedlibs/librmn/.git*
 +exclude lib/rpnpy/_sharedlibs/vgrid/.git*
 +exclude lib/rpnpy/_sharedlibs/libburp/.git*
+diff --git a/VERSION b/VERSION
+index 04bcabb..67ddfd3 100644
+--- a/VERSION
++++ b/VERSION
+@@ -1 +1 @@
+-x/2.1-u1.rc11
++x/2.1-rc11
 diff --git a/lib/rpnpy/burpc/__init__.py b/lib/rpnpy/burpc/__init__.py
 index ffdc484..5681690 100755
 --- a/lib/rpnpy/burpc/__init__.py
@@ -122,7 +129,7 @@ index 6255e40..b69e855 100755
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
-index 981041f..644f995 100755
+index c3af15a..aa3e41f 100755
 --- a/lib/rpnpy/vgd/__init__.py
 +++ b/lib/rpnpy/vgd/__init__.py
 @@ -75,22 +75,33 @@ def loadVGDlib(vgd_version=None):
@@ -147,8 +154,8 @@ index 981041f..644f995 100755
                                  VGD_VERSION_DEFAULT).strip()
      else:
          VGD_VERSION = vgd_version
--    vgd_libfile = 'libdescripshared' + VGD_VERSION.strip() + '.so'
-+    vgd_libfile = 'libdescripshared' + VGD_VERSION.strip() + '.' + suffix
+-    vgd_libfile = 'libvgridshared' + VGD_VERSION.strip() + '.so'
++    vgd_libfile = 'libvgridshared' + VGD_VERSION.strip() + '.' + suffix
  
 +    localpath   = [os.path.realpath(os.getcwd())]
      pylibpath   = os.getenv('PYTHONPATH','').split(':')
@@ -163,7 +170,7 @@ index 981041f..644f995 100755
                  break
 @@ -106,6 +117,8 @@ def loadVGDlib(vgd_version=None):
      except IOError:
-         raise IOError('ERROR: cannot load libdescrip shared version: ' +
+         raise IOError('ERROR: cannot load libvgrid shared version: ' +
                        VGD_VERSION)
 +
 +    os.chdir(curdir)
