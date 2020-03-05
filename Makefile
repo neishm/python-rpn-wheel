@@ -3,6 +3,7 @@
 # the CMC network.
 # See README.md for proper usage.
 
+FSTD2NC_DEPS_VERSION = 0.20200304.0
 RPNPY_VERSION = 2.1-rc11
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1rc11
@@ -77,7 +78,7 @@ endif
 ######################################################################
 # Rule for building the wheel file.
 
-RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
+RETAGGED_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-py2.py3-none-$(PLATFORM).whl
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
@@ -88,13 +89,13 @@ PYTHON ?= python
 _wheel:
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
+	env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse --plat-name $(PLATFORM)
 
 # Build a native wheel file (using host OS, assuming it's Linux-based).
 native: init
 	# Use setup.py to build the shared libraries and create the wheel file.
 	# Pass in any extra shared libraries needed for the wheel.
-	cd python-rpn && env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse
+	env EXTRA_LIBS="$(EXTRA_LIBS)" $(PYTHON) setup.py clean bdist_wheel --dist-dir $(PWD)/wheelhouse
 
 
 
@@ -128,7 +129,7 @@ endif
 # Rules for generated a bundled source distribution.
 
 sdist: init
-	cd python-rpn && $(PYTHON) setup.py clean sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
+	$(PYTHON) setup.py clean sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 
 
 ######################################################################

@@ -1,0 +1,9 @@
+include python-rpn/LICENSE python-rpn/VERSION python-rpn/DESCRIPTION python-rpn/KnownIssues
+recursive-include python-rpn/lib/rpnpy/_sharedlibs *
+prune python-rpn/lib/rpnpy/_sharedlibs/vgrid/tests
+prune python-rpn/lib/rpnpy/_sharedlibs/libburp/tests
+exclude python-rpn/lib/rpnpy/_sharedlibs/.git*
+exclude python-rpn/lib/rpnpy/_sharedlibs/*.pyc
+exclude python-rpn/lib/rpnpy/_sharedlibs/librmn/.git*
+exclude python-rpn/lib/rpnpy/_sharedlibs/vgrid/.git*
+exclude python-rpn/lib/rpnpy/_sharedlibs/libburp/.git*
