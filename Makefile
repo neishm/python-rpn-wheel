@@ -43,6 +43,7 @@ fetch: clean-submodules
 	git submodule foreach git fetch --tags
 clean: clean-submodules
 	rm -Rf wheelhouse/ dockerfiles/*/Dockerfile
+	rm -Rf build/
 distclean: clean
 	rm -Rf cache/
 # Rule for initializing the build process to do a fresh build.
@@ -127,7 +128,7 @@ endif
 # Rules for generated a bundled source distribution.
 
 sdist: init
-	cd python-rpn && $(PYTHON) setup.py sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
+	cd python-rpn && $(PYTHON) setup.py clean sdist --formats=zip --dist-dir $(PWD)/wheelhouse/
 
 
 ######################################################################
