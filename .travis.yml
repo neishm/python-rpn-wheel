@@ -3,6 +3,8 @@ sudo: false
 matrix:
   include:
     - os: osx
+      # Build for macOS 10.10
+      osx_image: xcode6.4
       language: generic
 
 before_install:
@@ -12,19 +14,18 @@ before_install:
   - uname -a
   - pip install --upgrade pip setuptools wheel
 script:
-  # Build and install from source.
-  - make sdist
-  - pip install wheelhouse/eccc_rpnpy-*.zip -V
-  # Run some basic checks to see if shared libraries can be loaded.
-  - make clean
-  - python -c "from rpnpy.librmn import librmn; print (librmn)"
-  - python -c "from rpnpy.vgd import libvgd; print (libvgd)"
-  - python -c "from rpnpy.burpc import libburpc; print (libburpc)"
-  # Run some unit tests.
-  - wget ftp://ccrp.tor.ec.gc.ca/pub/MNeish/wheelhouse/eccc_rpnpy_tests-2.1b3.zip -P wheelhouse/
-  - pip install wheelhouse/eccc_rpnpy_tests-2.1b3.zip
-  - rpy.tests
-  # Try native build.
-  - make native
+  # Build a native wheel.
+  - make clean && make native
   - ls -lh wheelhouse/
+  # Install and test it (with no gcc or gfortran system libraries installed).
+  - brew uninstall gcc
+  - pip install wheelhouse/fstd2nc_deps-*.whl -V
+  - python -c "import fstd2nc_deps; from rpnpy.librmn import librmn; print (librmn)"
+  - python -c "import fstd2nc_deps; from rpnpy.vgd import libvgd; print (libvgd)"
+  - python -c "import fstd2nc_deps; from rpnpy.burpc import libburpc; print (libburpc)"
+  - pip install --no-deps fstd2nc
+  - pip install netcdf4 numpy
+  - wget https://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm
+  - tar -xzvf afsisio_1.0u_all.ssm
+  - fstd2nc afsisio_1.0u_all/./data/datafiles/constants/irtab5_std test.nc
 
