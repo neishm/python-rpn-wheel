@@ -9,8 +9,7 @@ matrix:
 
 before_install:
   - echo $TRAVIS_OS_NAME
-  - brew cask uninstall --force oclint
-  - brew install gcc
+  - brew update && brew upgrade && brew install gcc
   - python --version # just to check
   - uname -a
   - pip install --upgrade pip setuptools wheel
