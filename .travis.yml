@@ -9,13 +9,21 @@ before_install:
   - echo $TRAVIS_OS_NAME
   - python --version # just to check
   - uname -a
-  - pip install --upgrade pip setuptools wheel
+  - pip install --upgrade 'pip<20.0' setuptools wheel
 script:
   # Build a native wheel.
   - make clean && make native
   - ls -lh wheelhouse/
+  # Check dependencies of the wheel.
+  - pip install delocate
+  - delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
+  # Try repairing wheel.
+  - mkdir fixed_wheels
+  - delocate-wheel -w fixed_wheels -v wheelhouse/fstd2nc_deps-*.whl
+  - ls -lh fixed_wheels/
+  - delocate-listdeps fixed_wheels/fstd2nc_deps-*.whl
   # Install and test it (with no gcc or gfortran system libraries installed).
-  - brew uninstall gcc
+  - brew uninstall --ignore-dependencies gcc
   - pip install wheelhouse/fstd2nc_deps-*.whl -V
   - python -c "import fstd2nc_deps; from rpnpy.librmn import librmn; print (librmn)"
   - python -c "import fstd2nc_deps; from rpnpy.vgd import libvgd; print (libvgd)"
@@ -24,5 +32,6 @@ script:
   - pip install netcdf4 numpy
   - wget https://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm
   - tar -xzvf afsisio_1.0u_all.ssm
-  - fstd2nc afsisio_1.0u_all/./data/datafiles/constants/irtab5_std test.nc
+  - fstd2nc afsisio_1.0u_all/./data/datafiles/constants/irtab5_std test.nc --exclude=i
+  - python -c "import netCDF4 as nc; print (nc.Dataset('test.nc'))"
 
