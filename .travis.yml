@@ -9,19 +9,15 @@ before_install:
   - echo $TRAVIS_OS_NAME
   - python --version # just to check
   - uname -a
-  - pip install --upgrade 'pip<20.0' setuptools wheel
+  - pip install --upgrade pip setuptools wheel
 script:
   # Build a native wheel.
-  - make clean && make native
+  - make init
+  - env EXTRA_LIBS="/usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib" python setup.py clean bdist_wheel --dist-dir $PWD/wheelhouse --plat-name macosx_10_9_x86_64
   - ls -lh wheelhouse/
   # Check dependencies of the wheel.
   - pip install delocate
   - delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
-  # Try repairing wheel.
-  - mkdir fixed_wheels
-  - delocate-wheel -w fixed_wheels -v wheelhouse/fstd2nc_deps-*.whl
-  - ls -lh fixed_wheels/
-  - delocate-listdeps fixed_wheels/fstd2nc_deps-*.whl
   # Install and test it (with no gcc or gfortran system libraries installed).
   - brew uninstall --ignore-dependencies gcc
   - pip install wheelhouse/fstd2nc_deps-*.whl -V
