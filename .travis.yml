@@ -13,7 +13,7 @@ before_install:
 script:
   # Build a native wheel.
   - make init
-  - env EXTRA_LIBS="/usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib" python setup.py clean bdist_wheel --dist-dir $PWD/wheelhouse --plat-name macosx_10_9_x86_64
+  - env EXTRA_LIBS="/usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib" python setup.py clean bdist_wheel --dist-dir $PWD/wheelhouse --plat-name macosx_10_9_x86_64
   - ls -lh wheelhouse/
   # Check dependencies of the wheel.
   - pip install delocate
