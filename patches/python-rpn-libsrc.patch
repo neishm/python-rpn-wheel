@@ -1,5 +1,5 @@
 diff --git a/__init__.py b/__init__.py
-index 3321a16..b7c7b7b 100644
+index 3321a16..9e54baa 100644
 --- a/__init__.py
 +++ b/__init__.py
 @@ -51,6 +51,15 @@ def get_extra_setup_args (*path):
@@ -11,10 +11,23 @@ index 3321a16..b7c7b7b 100644
 +      if sharedlib_suffix == 'dylib':
 +        from glob import glob
 +        for dylib in glob(libdir+'/*.dylib'):
++          check_call(['install_name_tool', '-add_rpath', '.', dylib])
 +          for extra_lib in os.environ.get('EXTRA_LIBS','').split():
-+            check_call(['install_name_tool', '-add_rpath', '.', dylib])
 +            check_call(['install_name_tool', '-change', extra_lib, '@rpath/'+os.path.basename(extra_lib), dylib])
 +
    cmdclass['build'] = BuildSharedLibs
  
    # Force the impl and abi tags.
+diff --git a/include/libs.mk b/include/libs.mk
+index 6339151..7890ac0 100644
+--- a/include/libs.mk
++++ b/include/libs.mk
+@@ -31,7 +31,7 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
+ 
+ # For MacOSX, try searching in current directory for libraries.
+ # (Use similar behaviour to Windows DLLs).
+-%.dylib: FFLAGS := $(FFLAGS) -dynamiclib -install_name @rpath/$@ -Wl,-rpath,.
++%.dylib: FFLAGS := $(FFLAGS) -dynamiclib -install_name @rpath/$@
+ 
+ $(LIBRMN_SHARED): $(LIBRMN_STATIC)
+ 	rm -f *.o
