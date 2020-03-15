@@ -1,8 +1,8 @@
 diff --git a/__init__.py b/__init__.py
-index 3321a16..872ef28 100644
+index 3321a16..b7c7b7b 100644
 --- a/__init__.py
 +++ b/__init__.py
-@@ -51,6 +51,14 @@ def get_extra_setup_args (*path):
+@@ -51,6 +51,15 @@ def get_extra_setup_args (*path):
        self.copy_tree(srcdir,builddir,preserve_symlinks=1)
  
        check_call(['make', 'PWD='+builddir, 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+libdir, 'SHAREDLIB_SUFFIX='+sharedlib_suffix], cwd=builddir)
@@ -12,6 +12,7 @@ index 3321a16..872ef28 100644
 +        from glob import glob
 +        for dylib in glob(libdir+'/*.dylib'):
 +          for extra_lib in os.environ.get('EXTRA_LIBS','').split():
++            check_call(['install_name_tool', '-add_rpath', '.', dylib])
 +            check_call(['install_name_tool', '-change', extra_lib, '@rpath/'+os.path.basename(extra_lib), dylib])
 +
    cmdclass['build'] = BuildSharedLibs
