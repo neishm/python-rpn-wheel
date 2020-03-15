@@ -19,9 +19,13 @@ script:
   - pip install delocate
   - cp build/lib/fstd2nc_deps/rpnpy/_sharedlibs/*.dylib . && delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
   - ls -l /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgfortran.5.dylib /usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib
+  - otool -l libgcc_s.1.dylib
   - otool -L libgcc_s.1.dylib
+  - otool -l libgfortran.5.dylib
   - otool -L libgfortran.5.dylib
+  - otool -l libquadmath.0.dylib
   - otool -L libquadmath.0.dylib
+  - otool -l librmnshared_019.5-rpnpy.dylib
   - otool -L librmnshared_019.5-rpnpy.dylib
   # Install and test it (with no gcc or gfortran system libraries installed).
   - brew uninstall --ignore-dependencies gcc
