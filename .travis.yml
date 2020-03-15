@@ -17,7 +17,7 @@ script:
   - ls -lh wheelhouse/
   # Check dependencies of the wheel.
   - pip install delocate
-  - delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
+  - cp build/lib/fstd2nc_deps/rpnpy/_sharedlibs/*.dylib . && delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
   - ls -l /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgfortran.5.dylib /usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib
   # Install and test it (with no gcc or gfortran system libraries installed).
   - brew uninstall --ignore-dependencies gcc
