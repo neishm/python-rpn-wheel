@@ -21,6 +21,7 @@ script:
   - ls -l /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgcc_s.1.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libgfortran.5.dylib /usr/local/opt/gcc/lib/gcc/9/libgfortran.5.dylib /usr/local/Cellar/gcc/9.2.0_2/lib/gcc/9/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/9/libquadmath.0.dylib
   # Install and test it (with no gcc or gfortran system libraries installed).
   - brew uninstall --ignore-dependencies gcc
+  - echo "leftover deps:" && delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
   - pip install wheelhouse/fstd2nc_deps-*.whl -V
   - python -c "import fstd2nc_deps; from rpnpy.librmn import librmn; print (librmn)"
   - python -c "import fstd2nc_deps; from rpnpy.vgd import libvgd; print (libvgd)"
