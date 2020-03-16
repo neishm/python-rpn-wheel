@@ -1,8 +1,8 @@
 diff --git a/__init__.py b/__init__.py
-index 3321a16..8d377c7 100644
+index 3321a16..a26b51e 100644
 --- a/__init__.py
 +++ b/__init__.py
-@@ -51,6 +51,16 @@ def get_extra_setup_args (*path):
+@@ -51,6 +51,20 @@ def get_extra_setup_args (*path):
        self.copy_tree(srcdir,builddir,preserve_symlinks=1)
  
        check_call(['make', 'PWD='+builddir, 'BUILDDIR='+builddir, 'SHAREDLIB_DIR='+libdir, 'SHAREDLIB_SUFFIX='+sharedlib_suffix], cwd=builddir)
@@ -10,25 +10,31 @@ index 3321a16..8d377c7 100644
 +      # Patch up macOS libraries
 +      if sharedlib_suffix == 'dylib':
 +        from glob import glob
-+        for dylib in glob(libdir+'/*.dylib'):
++        dylibs = glob(libdir+'/*.dylib')
++        for dylib in dylibs:
 +          check_call(['install_name_tool', '-id', '@rpath/'+os.path.basename(dylib), dylib])
 +          check_call(['install_name_tool', '-add_rpath', '.', dylib])
 +          for extra_lib in os.environ.get('EXTRA_LIBS','').split():
 +            check_call(['install_name_tool', '-change', extra_lib, '@rpath/'+os.path.basename(extra_lib), dylib])
++          for dyl in dylibs:
++            check_call(['install_name_tool', '-change', dyl, '@rpath/'+os.path.basename(dyl), dylib])
++
 +
    cmdclass['build'] = BuildSharedLibs
  
    # Force the impl and abi tags.
 diff --git a/include/libs.mk b/include/libs.mk
-index 6339151..7890ac0 100644
+index 6339151..847042a 100644
 --- a/include/libs.mk
 +++ b/include/libs.mk
-@@ -31,7 +31,7 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
+@@ -29,9 +29,7 @@ LIBBURPC_SHARED = $(SHAREDLIB_DIR)/libburp_c_shared_$(LIBBURPC_VERSION).$(SHARED
+ # Linux shared libraries need to be explicitly told to look in their current path for dependencies.
+ %.so: FFLAGS := $(FFLAGS) -Wl,-rpath,'$$ORIGIN' -Wl,-z,origin
  
- # For MacOSX, try searching in current directory for libraries.
- # (Use similar behaviour to Windows DLLs).
+-# For MacOSX, try searching in current directory for libraries.
+-# (Use similar behaviour to Windows DLLs).
 -%.dylib: FFLAGS := $(FFLAGS) -dynamiclib -install_name @rpath/$@ -Wl,-rpath,.
-+%.dylib: FFLAGS := $(FFLAGS) -dynamiclib -install_name @rpath/$@
++%.dylib: FFLAGS := $(FFLAGS) -dynamiclib
  
  $(LIBRMN_SHARED): $(LIBRMN_STATIC)
  	rm -f *.o
