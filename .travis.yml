@@ -10,6 +10,8 @@ before_install:
   - python --version # just to check
   - uname -a
   - pip install --upgrade pip setuptools wheel
+install:
+  - brew install gcc
 script:
   # Build a native wheel.
   - make init
