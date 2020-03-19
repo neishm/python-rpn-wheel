@@ -10,11 +10,10 @@ before_install:
   - echo $TRAVIS_OS_NAME
   - python --version # just to check
   - uname -a
-  - pip install --upgrade pip wheel
+  - pip install --upgrade pip
 install:
   - brew uninstall --ignore-dependencies gcc
 script:
-  - pip install -i https://test.pypi.org/simple/ fstd2nc-deps
   - pip install fstd2nc
   - wget https://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm
   - tar -xzvf afsisio_1.0u_all.ssm
