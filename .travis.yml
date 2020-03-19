@@ -11,7 +11,7 @@ before_install:
   - echo $TRAVIS_OS_NAME
   - python --version # just to check
   - uname -a
-  - pip install --upgrade pip setuptools wheel
+  - pip install --upgrade pip "setuptools<45"  wheel
 install:
   - brew install gcc
 script:
