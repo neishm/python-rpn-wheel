@@ -3,28 +3,50 @@ sudo: false
 matrix:
   include:
     - os: osx
+      osx_image: xcode7.3
       language: generic
-
+env:
+  - HOMEBREW_NO_AUTO_UPDATE=1
 before_install:
   - echo $TRAVIS_OS_NAME
-  - brew install gcc
   - python --version # just to check
   - uname -a
-  - pip install --upgrade pip setuptools wheel
+  - pip install --upgrade pip "setuptools<45"  wheel
+install:
+  - brew install gcc
 script:
-  # Build and install from source.
-  - make sdist
-  - pip install wheelhouse/eccc_rpnpy-*.zip -V
-  # Run some basic checks to see if shared libraries can be loaded.
-  - make clean
-  - python -c "from rpnpy.librmn import librmn; print (librmn)"
-  - python -c "from rpnpy.vgd import libvgd; print (libvgd)"
-  - python -c "from rpnpy.burpc import libburpc; print (libburpc)"
-  # Run some unit tests.
-  - wget ftp://ccrp.tor.ec.gc.ca/pub/MNeish/wheelhouse/eccc_rpnpy_tests-2.1b3.zip -P wheelhouse/
-  - pip install wheelhouse/eccc_rpnpy_tests-2.1b3.zip
-  - rpy.tests
-  # Try native build.
-  - make native
+  # Build a native wheel.
+  - make init
+  - env EXTRA_LIBS="/usr/local/opt/gcc/lib/gcc/6/libgfortran.3.dylib /usr/local/lib/gcc/6/libgcc_s.1.dylib /usr/local/Cellar/gcc/6.2.0/lib/gcc/6/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/6/libquadmath.0.dylib" python setup.py clean bdist_wheel --dist-dir $PWD/wheelhouse --plat-name macosx_10_11_x86_64
   - ls -lh wheelhouse/
+  # Check dependencies of the wheel.
+  - pip install delocate
+  - cp build/lib/fstd2nc_deps/rpnpy/_sharedlibs/*.dylib . && delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
+  - ls -l /usr/local/opt/gcc/lib/gcc/6/libgfortran.3.dylib /usr/local/lib/gcc/6/libgcc_s.1.dylib /usr/local/Cellar/gcc/6.2.0/lib/gcc/6/libquadmath.0.dylib /usr/local/opt/gcc/lib/gcc/6/libquadmath.0.dylib
+  - otool -l libgcc_s.1.dylib
+  - otool -L libgcc_s.1.dylib
+  - otool -l libgfortran.3.dylib
+  - otool -L libgfortran.3.dylib
+  - otool -l libquadmath.0.dylib
+  - otool -L libquadmath.0.dylib
+  - otool -l librmnshared_019.5-rpnpy.dylib
+  - otool -L librmnshared_019.5-rpnpy.dylib
+  # Install and test it (with no gcc or gfortran system libraries installed).
+  - brew uninstall --ignore-dependencies gcc
+  - echo "leftover deps:" && delocate-listdeps wheelhouse/fstd2nc_deps-*.whl
+  - rm -f *.dylib
+  - pip install wheelhouse/fstd2nc_deps-*.whl -V
+  - python -c "import fstd2nc_deps; from rpnpy.librmn import librmn; print (librmn)"
+  - python -c "import fstd2nc_deps; from rpnpy.vgd import libvgd; print (libvgd)"
+  - python -c "import fstd2nc_deps; from rpnpy.burpc import libburpc; print (libburpc)"
+  - pip install --upgrade netcdf4 numpy
+  - pip install fstd2nc
+  - wget https://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm
+  - tar -xzvf afsisio_1.0u_all.ssm
+  - fstd2nc afsisio_1.0u_all/./data/datafiles/constants/ozoclim_Fortuin_Kelder1998 test.nc -f --exclude=i
+  - python -c "import netCDF4 as nc; print (nc.Dataset('test.nc'))"
+
+after_success:
+  - pip install twine
+  - twine upload wheelhouse/*.whl --repository-url https://test.pypi.org/legacy/ --username "__token__"
 
