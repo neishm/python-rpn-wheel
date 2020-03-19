@@ -48,5 +48,5 @@ script:
 
 after_success:
   - pip install twine
-  - twine upload wheelhouse/*.whl --repository https://test.pypi.org/legacy/ --username "__token__" --non-interactive
+  - twine upload wheelhouse/*.whl --repository https://test.pypi.org/legacy/ --username "__token__"
 
