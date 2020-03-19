@@ -46,3 +46,7 @@ script:
   - fstd2nc afsisio_1.0u_all/./data/datafiles/constants/ozoclim_Fortuin_Kelder1998 test.nc -f --exclude=i
   - python -c "import netCDF4 as nc; print (nc.Dataset('test.nc'))"
 
+after_success:
+  - pip install twine
+  - twine upload wheelhouse/*.whl --repository https://test.pypi.org/legacy/ --username "__token__" --non-interactive
+
