@@ -50,7 +50,6 @@ distclean: clean
 # Rule for initializing the build process to do a fresh build.
 init: clean-submodules
 	git submodule update --init --recursive
-	cd python-rpn-libsrc && patch -p1 < $(PWD)/patches/python-rpn-libsrc.patch
 	cd python-rpn && patch -p1 < $(PWD)/patches/python-rpn.patch
 	cd python-rpn/lib/rpnpy && ln -s ../../../python-rpn-libsrc _sharedlibs
 	touch $@
