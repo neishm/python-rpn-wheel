@@ -14,7 +14,6 @@ before_install:
 install:
   - brew uninstall --ignore-dependencies gcc
 script:
-  - pip install --upgrade numpy
   - pip install fstd2nc
   - wget https://collaboration.cmc.ec.gc.ca/science/ssm/afsisio_1.0u_all.ssm
   - tar -xzvf afsisio_1.0u_all.ssm
