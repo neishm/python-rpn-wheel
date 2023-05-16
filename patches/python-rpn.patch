@@ -133,6 +133,19 @@ index 6255e40..14499c5 100755
      return (RMN_VERSION, RMN_LIBPATH, librmn)
  
  (RMN_VERSION, RMN_LIBPATH, librmn) = loadRMNlib()
+diff --git a/lib/rpnpy/librmn/fstd98.py b/lib/rpnpy/librmn/fstd98.py
+index 582be66..a7fa447 100755
+--- a/lib/rpnpy/librmn/fstd98.py
++++ b/lib/rpnpy/librmn/fstd98.py
+@@ -159,7 +159,7 @@ def dtype_numpy2fst(npdtype, compress=True, missing=False):
+        rpnpy.librmn.const
+        FSTDError
+     """
+-    if not (type(npdtype) == _np.dtype or type(npdtype) == type):
++    if not (isinstance(npdtype, _np.dtype) or isinstance(npdtype, type)):
+         raise TypeError("dtype_numpy2fst: Expecting arg of type {0}, Got {1}"\
+                         .format('numpy.dtype', type(npdtype)))
+     datyp = 0 #default returned type: binary
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
 index c3af15a..0b87efa 100755
 --- a/lib/rpnpy/vgd/__init__.py
