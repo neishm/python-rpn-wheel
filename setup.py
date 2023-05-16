@@ -30,7 +30,7 @@ packages = ['fstd2nc_deps.'+p for p in packages] + ['fstd2nc_deps']
 
 setup (
   name="fstd2nc_deps",
-  version='0.20200304.1',
+  version='0.20200304.2',
   description = 'Dependencies for the fstd2nc package.',
   long_description = """
 Provides the Python-RPN_ package, along with the libraries_ needed for fstd2nc.
