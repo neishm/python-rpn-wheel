@@ -82,7 +82,7 @@ RETAGGED_WHEEL = fstd2nc_deps-$(FSTD2NC_DEPS_VERSION)-py2.py3-none-$(PLATFORM).w
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
-PYTHON=/opt/python/cp27-cp27m/bin/python
+PYTHON=/opt/python/cp36-cp36m/bin/python
 endif
 PYTHON ?= python
 
