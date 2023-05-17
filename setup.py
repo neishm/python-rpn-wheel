@@ -23,6 +23,9 @@ if os.path.exists(os.path.join('python-rpn','lib','rpnpy','_sharedlibs','librmn'
 else:
   extra_setup_args = {}
 
+# Remove forced tag name, if not building in one of the standard docker images
+if 'PLATFORM' not in os.environ:
+  extra_setup_args.get('cmdclass',{}).pop('bdist_wheel',None)
 
 packages = find_packages('python-rpn/lib')
 packages = ['fstd2nc_deps.'+p for p in packages] + ['fstd2nc_deps']
