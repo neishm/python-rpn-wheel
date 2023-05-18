@@ -3,7 +3,7 @@
 # the CMC network.
 # See README.md for proper usage.
 
-FSTD2NC_DEPS_VERSION = 0.20200304.4
+FSTD2NC_DEPS_VERSION = 0.20200304.5
 RPNPY_VERSION = 2.1-rc11
 # Wheel files use slightly different version syntax.
 RPNPY_VERSION_WHEEL = 2.1rc11
