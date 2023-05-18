@@ -22,7 +22,7 @@ index 0000000..ef7efd8
 +import os, sys
 +sys.path.append(os.path.dirname(__file__))
 diff --git a/lib/rpnpy/burpc/__init__.py b/lib/rpnpy/burpc/__init__.py
-index ffdc484..d23f97a 100755
+index ffdc484..85298db 100755
 --- a/lib/rpnpy/burpc/__init__.py
 +++ b/lib/rpnpy/burpc/__init__.py
 @@ -85,22 +85,39 @@ def load_burpc_lib(burpc_version=None):
@@ -39,12 +39,12 @@ index ffdc484..d23f97a 100755
 +      from rpnpy._sharedlibs import sharedlib_suffix as suffix
 +      # Look for embedded shared libraries.
 +      sharedlibs = os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs')
++      os.chdir(sharedlibs)
 +      # For Python >= 3.8 on Windows, need to add the library path
 +      try:
 +        os.add_dll_directory(sharedlibs)
-+      # For Python < 3.8 on Windows, change the current directory to see the .dll files.
 +      except AttributeError:
-+        os.chdir(sharedlibs)
++        pass
 +    except ImportError:
 +      suffix = 'so'
  
@@ -76,7 +76,7 @@ index ffdc484..d23f97a 100755
  
  (BURPC_VERSION, BURPC_LIBPATH, libburpc) = load_burpc_lib()
 diff --git a/lib/rpnpy/librmn/__init__.py b/lib/rpnpy/librmn/__init__.py
-index 6255e40..14499c5 100755
+index 6255e40..eb3aa42 100755
 --- a/lib/rpnpy/librmn/__init__.py
 +++ b/lib/rpnpy/librmn/__init__.py
 @@ -74,20 +74,35 @@ def loadRMNlib(rmn_version=None):
@@ -89,12 +89,12 @@ index 6255e40..14499c5 100755
 +      from rpnpy._sharedlibs import sharedlib_suffix as suffix
 +      # Look for embedded shared libraries.
 +      sharedlibs = os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs')
++      os.chdir(sharedlibs)
 +      # For Python >= 3.8 on Windows, need to add the library path
 +      try:
 +        os.add_dll_directory(sharedlibs)
-+      # For Python < 3.8 on Windows, change the current directory to see the .dll files.
 +      except AttributeError:
-+        os.chdir(sharedlibs)
++        pass
 +    except ImportError:
 +      suffix = 'so'
  
@@ -147,7 +147,7 @@ index 582be66..a7fa447 100755
                          .format('numpy.dtype', type(npdtype)))
      datyp = 0 #default returned type: binary
 diff --git a/lib/rpnpy/vgd/__init__.py b/lib/rpnpy/vgd/__init__.py
-index c3af15a..0b87efa 100755
+index c3af15a..107513c 100755
 --- a/lib/rpnpy/vgd/__init__.py
 +++ b/lib/rpnpy/vgd/__init__.py
 @@ -75,22 +75,39 @@ def loadVGDlib(vgd_version=None):
@@ -164,12 +164,12 @@ index c3af15a..0b87efa 100755
 +      from rpnpy._sharedlibs import sharedlib_suffix as suffix
 +      # Look for embedded shared libraries.
 +      sharedlibs = os.path.join(os.path.dirname(__file__),os.pardir,'_sharedlibs')
++      os.chdir(sharedlibs)
 +      # For Python >= 3.8 on Windows, need to add the library path
 +      try:
 +        os.add_dll_directory(sharedlibs)
-+      # For Python < 3.8 on Windows, change the current directory to see the .dll files.
 +      except AttributeError:
-+        os.chdir(sharedlibs)
++        pass
 +    except ImportError:
 +      suffix = 'so'
  
