@@ -17,17 +17,20 @@ wheels: docker
 	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-windows-build bash -c 'cd /io && $(MAKE) _wheel PLATFORM=win_amd64'
 	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it rpnpy-manylinux2010_x86_64-build bash -c 'cd /io && $(MAKE) _wheel PLATFORM=manylinux2010_x86_64'
 
+recent: docker
+	$(MAKE) init && sudo docker run --rm -v $(PWD):/io -it recent bash -c 'cd /io && $(MAKE) _wheel PLATFORM=linux'
 
 # Rule for generating images from Dockerfiles.
 # This sets up a clean build environment to reduce the likelihood that
 # something goes wrong at build-time or run-time.
-docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile
+docker: dockerfiles/windows/Dockerfile dockerfiles/manylinux2010_x86_64-build/Dockerfile dockerfiles/test_from_wheel/Dockerfile dockerfiles/test_from_sdist/Dockerfile dockerfiles/recent/Dockerfile
 	sudo docker pull ubuntu:16.04
 	sudo docker build --tag rpnpy-windows-build dockerfiles/windows
 	sudo docker pull quay.io/pypa/manylinux2010_x86_64
 	sudo docker build --tag rpnpy-manylinux2010_x86_64-build dockerfiles/manylinux2010_x86_64-build
 	sudo docker build --tag rpnpy-test-from-wheel dockerfiles/test_from_wheel
 	sudo docker build --tag rpnpy-test-from-sdist dockerfiles/test_from_sdist
+	sudo docker build --tag recent dockerfiles/recent
 
 # Rule for generating a Dockerfile.
 # Fills in userid/groupid information specific to the host system.
