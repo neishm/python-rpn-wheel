@@ -1,0 +1,11 @@
+FROM ubuntu:22.04
+
+RUN apt-get update && apt-get install -y make python3 virtualenv wget
+
+RUN groupadd -g $GID $GROUP || true
+RUN useradd -g $GID -u $UID $USER
+
+RUN apt-get update && apt-get install -y patch python-setuptools python3-wheel python-is-python3
+RUN apt-get update && apt-get install -y gfortran
+
+USER $USER
