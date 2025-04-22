@@ -81,9 +81,9 @@ RETAGGED_WHEEL = eccc_rpnpy-$(RPNPY_VERSION_WHEEL)-py2.py3-none-$(PLATFORM).whl
 
 # Linux builds should be done in the manylinux containers.
 ifneq (,$(findstring manylinux,$(PLATFORM)))
-PYTHON=/opt/python/cp27-cp27m/bin/python
+PYTHON=/opt/python/cp36-cp36m/bin/python
 endif
-PYTHON ?= python
+PYTHON ?= python2
 
 _wheel:
 	# Use setup.py to build the shared libraries and create the wheel file.
